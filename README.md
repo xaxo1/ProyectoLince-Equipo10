@@ -1,12 +1,11 @@
 # ProyectoLince-Equipo10
 Evaluacion n°1 Desarrollo de aplicaciones moviles
 
-
 # Proyecto Lince: Lince Driver
 
 **Propósito:** Aplicación móvil diseñada para mejorar la trazabilidad y rapidez del proceso de asignación y confirmación de servicios turísticos de Southbound. Permite a los drivers y guías revisar sus asignaciones, confirmar o rechazar servicios, registrar disponibilidad y marcar hitos de check-in/check-out directamente en terreno.
 
-## Identidad Visual
+## 🎨 Identidad Visual
 * **Logotipo:** Ubicado en `docs/diseno/logo.png`
 * **Paleta de Colores:**
   * **Principal:** Verde Oscuro (`#2E7D32`) - Para acciones afirmativas (Confirmar, Check-in).
@@ -14,7 +13,7 @@ Evaluacion n°1 Desarrollo de aplicaciones moviles
   * **Fondo:** Gris Oscuro (`#121212`) - Para reducir el cansancio visual del usuario en ruta.
   * **Texto:** Blanco (`#FFFFFF`) - Alto contraste para legibilidad en exteriores.
 
-## Flujo de Usuario (UML)
+## 🔄 Flujo de Usuario (UML)
 
 ```mermaid
 flowchart TD
@@ -62,45 +61,27 @@ flowchart TD
     GPS2 --> EstFin[Estado: Finalizada]
     
     EstFin --> End
+```
 
+## 📱 Pantallas Principales (Interfaces)
+Las propuestas visuales generadas se encuentran en el directorio `docs/diseno/interfaces/`.
+* Login
+* Inicio / Home
+* Listado de servicios asignados
+* Detalle del servicio
+* Confirmación / Rechazo
+* Disponibilidad
+* Check-in / Check-out
+* Perfil
 
-## Pantallas Principales (Interfaces)
-Las propuestas visuales generadas se encuentran en el directorio docs/diseno/interfaces/.
+## 👥 Integrantes (Equipo 10)
+* **Nicolás López** - Diseñador UX/UI
+* **Ignacio Oyarzun** - Arquitecto de Software
+* **Pablo Velásquez** - Desarrollador Mobile
 
-Login
-
-Inicio / Home
-
-Listado de servicios asignados
-
-Detalle del servicio
-
-Confirmación / Rechazo
-
-Disponibilidad
-
-Check-in / Check-out
-
-
-## Perfil
-
-Integrantes (Equipo 10)
-Nicolás López - Diseñador UX/UI
-
-Ignacio Oyarzun - Arquitecto de Software
-
-Pablo Velásquez - Desarrollador Mobile
-
-
-## Tecnologías
-
-
-Kotlin
-
-Jetpack Compose (Material Design 3)
-
-Arquitectura MVVM
-
-Room (Persistencia Local para modo sin conexión)
-
-Retrofit (Consumo API REST Simulada)
+## 🛠️ Tecnologías
+* Kotlin
+* Jetpack Compose (Material Design 3)
+* Arquitectura MVVM
+* Room (Persistencia Local para modo sin conexión)
+* Retrofit (Consumo API REST Simulada)
