@@ -17,51 +17,50 @@ Evaluacion n°1 Desarrollo de aplicaciones moviles
 
 ```mermaid
 flowchart TD
-    %% Nodos de inicio y fin
     Start([Inicio])
     End([Fin])
 
-    %% Flujo de Autenticación
     Start --> Login[Pantalla: Login]
     Login --> Validar{¿Credenciales válidas?}
     Validar -- No --> Login
-    Validar -- Sí --> Home[Pantalla: Inicio]
+    Validar -- Sí --> Home[Pantalla: Servicios del día]
 
-    %% Navegación Principal
-    Home --> Menu{Seleccionar Opción}
-    
-    %% Flujos Secundarios
-    Menu -- Gestionar Fechas --> Disp[Pantalla: Disponibilidad]
-    Disp --> End
-    
-    %% Flujo Principal de Asignaciones
-    Menu -- Ver Asignaciones --> Listado[Pantalla: Listado de Servicios]
-    Listado --> Detalle[Pantalla: Detalle del Servicio]
-    
-    %% Toma de Decisiones en el Servicio
-    Detalle --> Decision{¿Qué acción realizar?}
-    
-    %% Camino 1: Confirmar
-    Decision -- Confirmar --> Confirmacion[Registrar Confirmación]
-    Confirmacion --> EstConf[Estado: Confirmada]
-    EstConf --> Listado
-    
-    %% Camino 2: Rechazar
-    Decision -- Rechazar --> Rechazo[Ingresar Motivo]
-    Rechazo --> EstRech[Estado: Rechazada]
-    EstRech --> Listado
-    
-    %% Camino 3: Ejecución en terreno
-    Decision -- Iniciar Ruta --> CheckIn[Registrar Check-in]
-    CheckIn --> GPS1[Capturar Hora y Ubicación]
-    GPS1 --> EstCurso[Estado: En Curso]
-    
-    EstCurso --> CheckOut[Registrar Check-out]
-    CheckOut --> GPS2[Capturar Hora y Ubicación]
-    GPS2 --> EstFin[Estado: Finalizada]
-    
-    EstFin --> End
-```
+    Home --> Menu{Seleccionar opción}
+
+    %% Consulta de otras fechas
+    Menu -- Ver otra fecha --> Cal[Pantalla: Calendario]
+    Cal --> Detalle
+
+    %% Flujo principal
+    Menu -- Abrir servicio de hoy --> Detalle[Pantalla: Detalle del servicio]
+    Detalle --> Accion{¿Qué desea hacer?}
+
+    Accion -- Ver reserva --> Reserva[Pantalla: Reserva completa]
+    Reserva --> Detalle
+
+    Accion -- Iniciar servicio --> CheckIn[Registrar Check-in]
+    CheckIn --> GPS1[Capturar hora y ubicación]
+    GPS1 --> Punt{¿Llegó 15 min antes del pickup?}
+    Punt -- No --> Atraso[Marcar atraso y notificar a operaciones]
+    Atraso --> Curso
+    Punt -- Sí --> Curso[Estado: En curso]
+    Curso --> CheckOut[Registrar Check-out]
+    CheckOut --> GPS2[Capturar hora y ubicación]
+    GPS2 --> Fin1[Estado: Finalizado]
+    Fin1 --> End
+
+    %% Disponibilidad
+    Menu -- Gestionar disponibilidad --> Disp[Pantalla: Disponibilidad]
+    Disp --> Sel[Seleccionar día a bloquear]
+    Sel --> Valida{¿Falta más de una semana y el día está libre?}
+    Valida -- No --> Error[Mostrar error: no se puede bloquear]
+    Error --> Disp
+    Valida -- Sí --> Bloq[Registrar día bloqueado]
+    Bloq --> End
+
+    %% Reportería
+    Menu -- Ver resumen mensual --> Resumen[Pantalla: Resumen mensual]
+    Resumen --> End
 
 ## 📱 Pantallas Principales (Interfaces)
 Las propuestas visuales generadas se encuentran en el directorio `docs/diseno/interfaces/`.
