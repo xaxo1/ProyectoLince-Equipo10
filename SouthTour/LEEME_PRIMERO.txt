@@ -1,0 +1,20 @@
+SOUTHTOUR - PROYECTO LISTO PARA ABRIR EN ANDROID STUDIO
+========================================================
+
+ABRIR EL PROYECTO
+1. Descomprime el zip (clic derecho > Extraer todo).
+2. En Android Studio: File > Open... y elige ESTA carpeta (SouthTour).
+3. Si pregunta "Trust Project?", elige Trust Project.
+4. Espera a que termine la sincronización (la primera vez descarga Gradle y
+   las librerías; necesita internet y puede tardar varios minutos).
+5. Si aparece un error que menciona "android-37" o "SDK Platform 37",
+   haz clic en el enlace azul "Install missing SDK package(s)" y acepta.
+6. Elige el emulador arriba y presiona el botón Play (Run).
+
+USUARIOS DE PRUEBA (clave 1234)
+   guia@southbound.cl
+   transportista@southbound.cl
+
+QUÉ HAY EN docs/avance
+   GUIA_PRESENTACION.md      -> dónde está cada requisito + recorrido para la demo
+   SECCION_README_avance.md  -> texto para pegar al final del README del repositorio
