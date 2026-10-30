@@ -26,6 +26,9 @@ object Formatos {
     /** Hora actual en formato "HH:mm" (se usa en el check-in / check-out). */
     fun horaActual(): String = formatoHora.format(Date())
 
+    /** Fecha y hora actual "yyyy-MM-dd HH:mm" (registro de incidencias). */
+    fun fechaHoraActual(): String = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date())
+
     /** Fecha a "dias" de hoy (positivo = futuro, negativo = pasado). */
     fun fechaEnDias(dias: Int): String {
         val calendario = Calendar.getInstance()

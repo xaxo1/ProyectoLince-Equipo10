@@ -1,5 +1,11 @@
 package com.equipo10.lince.data
 
+import android.content.Context
+import android.graphics.Bitmap
+import com.equipo10.lince.data.local.BloqueoEntity
+import com.equipo10.lince.data.local.IncidenciaEntity
+import com.equipo10.lince.data.local.LinceDatabase
+import com.equipo10.lince.data.local.RegistroServicioEntity
 import com.equipo10.lince.model.AccionNoPermitidaException
 import com.equipo10.lince.model.ActividadItinerario
 import com.equipo10.lince.model.Asignacion
@@ -9,30 +15,50 @@ import com.equipo10.lince.model.DiaDisponibilidad
 import com.equipo10.lince.model.EstadoDia
 import com.equipo10.lince.model.EstadoServicio
 import com.equipo10.lince.model.Guia
+import com.equipo10.lince.model.Incidencia
 import com.equipo10.lince.model.Perfil
 import com.equipo10.lince.model.Reserva
 import com.equipo10.lince.model.ReservaNoEncontradaException
 import com.equipo10.lince.model.ResumenMensual
 import com.equipo10.lince.model.Servicio
+import com.equipo10.lince.model.TipoIncidencia
 import com.equipo10.lince.model.TipoServicio
 import com.equipo10.lince.model.ServicioNoEncontradoException
 import com.equipo10.lince.model.SesionNoIniciadaException
 import com.equipo10.lince.model.Transportista
+import com.equipo10.lince.model.Ubicacion
 import com.equipo10.lince.model.Usuario
 import com.equipo10.lince.model.montoTotal
 import com.equipo10.lince.util.Formatos
 import com.equipo10.lince.util.Formatos.fechaEnDias
 import com.equipo10.lince.util.Formatos.fechaPasadaDelMes
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import java.io.File
 
 /**
- * Fuente de datos FICTICIA ("API REST simulada" del README).
- * Las funciones son "suspend" y usan delay() para simular la espera de la red;
- * más adelante se reemplaza esta clase por Retrofit/Room sin tocar las pantallas.
+ * REPOSITORY: único punto de acceso a los datos para los ViewModels.
+ * - Datos FICTICIOS en memoria: usuarios, servicios asignados y reservas ("API REST simulada").
+ *   Las funciones son "suspend" y usan delay() para simular la espera de la red.
+ * - Datos PROPIOS del usuario guardados con ROOM (SQLite), que se conservan al cerrar la app:
+ *   check-in / check-out con ubicación, días bloqueados e incidencias.
  *
  * Las fechas se calculan desde HOY, así "Servicios del día" siempre tiene datos.
  */
 object RepositorioLince {
+
+    // ======================= ROOM =======================
+    private lateinit var db: LinceDatabase
+    private lateinit var carpetaFotos: File
+
+    /** Se llama una vez desde LinceApplication (Room necesita el Context para abrir el archivo .db). */
+    fun inicializar(context: Context) {
+        db = LinceDatabase.obtener(context)
+        carpetaFotos = File(context.filesDir, "incidencias").apply { mkdirs() }
+    }
 
     /** Días hacia adelante que muestra la pantalla de Disponibilidad. */
     private const val DIAS_DISPONIBILIDAD = 45
@@ -190,10 +216,6 @@ object RepositorioLince {
         ))
     }
 
-    /** Copia de los servicios tal como los asignó operaciones (se usa para "Reiniciar"). */
-    private val serviciosOriginales: Map<Int, Servicio> =
-        asignaciones.associate { it.servicio.id to it.servicio }
-
     // ======================= RESERVAS =======================
     // associateBy: convierte la lista en un MAP número de reserva -> Reserva
     private val reservas: Map<String, Reserva> = listOf(
@@ -286,13 +308,6 @@ object RepositorioLince {
         )
     ).associateBy { it.numero }
 
-    // ======================= DISPONIBILIDAD =======================
-    // MAP de id de usuario -> SET de fechas bloqueadas (un Set no permite fechas repetidas)
-    private val bloqueos: MutableMap<Int, MutableSet<String>> = mutableMapOf(
-        1 to mutableSetOf(fechaEnDias(14)),
-        2 to mutableSetOf()
-    )
-
     // ======================= SESIÓN =======================
     /** Usuario con sesión iniciada. Solo el repositorio puede cambiarlo (private set). */
     var usuarioActual: Usuario? = null
@@ -349,18 +364,19 @@ object RepositorioLince {
     /** Un servicio por id (para el Detalle). */
     suspend fun obtenerServicio(id: Int): Result<Servicio> {
         delay(300)
-        return runCatching { asignaciones[indiceDe(id)].servicio }
+        return runCatching { servicioDelUsuario(id) }
     }
 
     /**
      * Avanza el estado del servicio, igual que avanzarEstado() de la Clase 6:
      * CONFIRMADO --check-in--> EN_CURSO --check-out--> FINALIZADO
+     * El registro (hora + ubicación GPS) se guarda en Room: no se pierde al cerrar la app.
      */
-    suspend fun avanzarEstado(id: Int): Result<Servicio> {
+    suspend fun avanzarEstado(id: Int, ubicacion: Ubicacion?): Result<Servicio> {
         delay(500) // simula el envío a la API
         return runCatching {
-            val indice = indiceDe(id)
-            val actual = asignaciones[indice].servicio
+            val usuario = usuarioActual ?: throw SesionNoIniciadaException()
+            val actual = servicioDelUsuario(id)
             val ahora = Formatos.horaActual()
 
             val actualizado = when (actual.estado) {
@@ -371,26 +387,30 @@ object RepositorioLince {
                     actual.copy(
                         estado = EstadoServicio.EN_CURSO,
                         horaCheckIn = ahora,
-                        conAtraso = Formatos.llegaConAtraso(ahora, actual.horaPickup)
+                        conAtraso = Formatos.llegaConAtraso(ahora, actual.horaPickup),
+                        ubicacionCheckIn = ubicacion?.texto()
                     )
                 }
-                EstadoServicio.EN_CURSO -> actual.copy(estado = EstadoServicio.FINALIZADO, horaCheckOut = ahora)
+                EstadoServicio.EN_CURSO -> actual.copy(
+                    estado = EstadoServicio.FINALIZADO,
+                    horaCheckOut = ahora,
+                    ubicacionCheckOut = ubicacion?.texto()
+                )
                 EstadoServicio.FINALIZADO -> throw AccionNoPermitidaException("El servicio ya está finalizado")
                 EstadoServicio.CANCELADO -> throw AccionNoPermitidaException("No se puede iniciar un servicio cancelado")
             }
 
-            asignaciones[indice] = asignaciones[indice].copy(servicio = actualizado)
+            db.registroServicioDao().guardar(actualizado.aRegistro(usuario.id))
             actualizado
         }
     }
 
-    /** Devuelve el servicio a como lo asignó operaciones (como reiniciar() de la Clase 6). */
+    /** Devuelve el servicio a como lo asignó operaciones (como reiniciar() de la Clase 6): borra su registro en Room. */
     suspend fun reiniciarServicio(id: Int): Result<Servicio> {
         delay(300)
         return runCatching {
-            val indice = indiceDe(id)
-            val original = serviciosOriginales[id] ?: throw ServicioNoEncontradoException(id)
-            asignaciones[indice] = asignaciones[indice].copy(servicio = original)
+            val original = asignacionDelUsuario(id).servicio
+            db.registroServicioDao().eliminar(id)
             original
         }
     }
@@ -413,7 +433,7 @@ object RepositorioLince {
         return runCatching {
             val usuario = usuarioActual ?: throw SesionNoIniciadaException()
             val propios = serviciosDelUsuario().filter { it.estado != EstadoServicio.CANCELADO }
-            val bloqueados = bloqueos[usuario.id].orEmpty()
+            val bloqueados = db.bloqueoDao().fechasDelUsuario(usuario.id).toSet()   // Room
 
             // (0 until N).map: genera una lista con un elemento por cada día
             (0 until DIAS_DISPONIBILIDAD).map { dias ->
@@ -451,8 +471,9 @@ object RepositorioLince {
                 throw BloqueoNoPermitidoException("No se puede bloquear: ese día ya tiene un servicio asignado")
             }
 
-            val fechas = bloqueos.getOrPut(usuario.id) { mutableSetOf() }
-            if (!fechas.add(fecha)) throw BloqueoNoPermitidoException("Ese día ya estaba bloqueado")
+            // Room devuelve -1 si la fecha ya existía (OnConflictStrategy.IGNORE)
+            val resultado = db.bloqueoDao().insertar(BloqueoEntity(usuario.id, fecha))
+            if (resultado == -1L) throw BloqueoNoPermitidoException("Ese día ya estaba bloqueado")
         }
     }
 
@@ -460,9 +481,52 @@ object RepositorioLince {
         delay(300)
         return runCatching {
             val usuario = usuarioActual ?: throw SesionNoIniciadaException()
-            bloqueos[usuario.id]?.remove(fecha)
-            Unit
+            db.bloqueoDao().eliminar(usuario.id, fecha)
         }
+    }
+
+    // ======================= INCIDENCIAS (Room + cámara) =======================
+
+    /** FLOW de Room: emite la lista nueva cada vez que se guarda una incidencia del servicio. */
+    fun observarIncidencias(servicioId: Int): Flow<List<Incidencia>> =
+        db.incidenciaDao().observarDelServicio(servicioId)
+            .map { filas -> filas.map { it.aModelo() } }
+
+    /**
+     * Guarda la incidencia (y su foto, si hay) en el teléfono.
+     * Regla de negocio: solo se reportan incidencias de servicios ya iniciados.
+     */
+    suspend fun registrarIncidencia(
+        servicioId: Int,
+        tipo: TipoIncidencia,
+        descripcion: String,
+        pasajerosPresentes: Int,
+        foto: Bitmap?
+    ): Result<Incidencia> = runCatching {
+        val usuario = usuarioActual ?: throw SesionNoIniciadaException()
+        val servicio = servicioDelUsuario(servicioId)
+        if (servicio.estado != EstadoServicio.EN_CURSO && servicio.estado != EstadoServicio.FINALIZADO) {
+            throw AccionNoPermitidaException("Solo puedes reportar incidencias de un servicio iniciado")
+        }
+
+        val fila = IncidenciaEntity(
+            servicioId = servicioId,
+            usuarioId = usuario.id,
+            tipo = tipo.name,
+            descripcion = descripcion.trim(),
+            pasajerosPresentes = pasajerosPresentes,
+            rutaFoto = foto?.let { guardarFoto(it) },
+            registradaEn = Formatos.fechaHoraActual()
+        )
+        val id = db.incidenciaDao().insertar(fila)
+        fila.copy(id = id).aModelo()
+    }
+
+    /** Escribe la foto como .jpg en la memoria interna de la app (hilo IO: no bloquea la pantalla). */
+    private suspend fun guardarFoto(foto: Bitmap): String = withContext(Dispatchers.IO) {
+        val archivo = File(carpetaFotos, "incidencia_${System.currentTimeMillis()}.jpg")
+        archivo.outputStream().use { salida -> foto.compress(Bitmap.CompressFormat.JPEG, 90, salida) }
+        archivo.absolutePath
     }
 
     // ======================= PERFIL =======================
@@ -514,20 +578,63 @@ object RepositorioLince {
 
     // ======================= AUXILIARES =======================
 
-    /** filter + map + sortedBy sobre colecciones. Lanza excepción si no hay sesión. */
-    private fun serviciosDelUsuario(): List<Servicio> {
+    /**
+     * filter + map + sortedBy sobre colecciones. Lanza excepción si no hay sesión.
+     * A cada servicio asignado se le aplica su registro de check-in / check-out guardado en Room.
+     */
+    private suspend fun serviciosDelUsuario(): List<Servicio> {
         val usuario = usuarioActual ?: throw SesionNoIniciadaException()
+        val registros = db.registroServicioDao().obtenerDelUsuario(usuario.id).associateBy { it.servicioId }
         return asignaciones
             .filter { it.usuarioId == usuario.id }
-            .map { it.servicio }
+            .map { it.servicio.conRegistro(registros[it.servicio.id]) }
             .sortedBy { it.fecha + it.horaPickup }
     }
 
-    /** Posición de la asignación del usuario actual para ese servicio. */
-    private fun indiceDe(idServicio: Int): Int {
+    /** Un servicio del usuario actual, con su registro de Room aplicado. */
+    private suspend fun servicioDelUsuario(idServicio: Int): Servicio =
+        asignacionDelUsuario(idServicio).servicio
+            .conRegistro(db.registroServicioDao().obtenerPorServicio(idServicio))
+
+    /** La asignación del usuario actual para ese servicio (tal como la hizo operaciones). */
+    private fun asignacionDelUsuario(idServicio: Int): Asignacion {
         val usuario = usuarioActual ?: throw SesionNoIniciadaException()
-        val indice = asignaciones.indexOfFirst { it.usuarioId == usuario.id && it.servicio.id == idServicio }
-        if (indice == -1) throw ServicioNoEncontradoException(idServicio)
-        return indice
+        return asignaciones.find { it.usuarioId == usuario.id && it.servicio.id == idServicio }
+            ?: throw ServicioNoEncontradoException(idServicio)
     }
+
+    // ----- Conversión entre el modelo de la app y las filas de Room -----
+
+    private fun Servicio.conRegistro(registro: RegistroServicioEntity?): Servicio =
+        registro?.let {
+            copy(
+                estado = EstadoServicio.valueOf(it.estado),
+                horaCheckIn = it.horaCheckIn,
+                horaCheckOut = it.horaCheckOut,
+                conAtraso = it.conAtraso,
+                ubicacionCheckIn = it.ubicacionCheckIn,
+                ubicacionCheckOut = it.ubicacionCheckOut
+            )
+        } ?: this
+
+    private fun Servicio.aRegistro(usuarioId: Int) = RegistroServicioEntity(
+        servicioId = id,
+        usuarioId = usuarioId,
+        estado = estado.name,
+        horaCheckIn = horaCheckIn,
+        horaCheckOut = horaCheckOut,
+        conAtraso = conAtraso,
+        ubicacionCheckIn = ubicacionCheckIn,
+        ubicacionCheckOut = ubicacionCheckOut
+    )
+
+    private fun IncidenciaEntity.aModelo() = Incidencia(
+        id = id,
+        servicioId = servicioId,
+        tipo = TipoIncidencia.valueOf(tipo),
+        descripcion = descripcion,
+        pasajerosPresentes = pasajerosPresentes,
+        rutaFoto = rutaFoto,
+        registradaEn = registradaEn
+    )
 }

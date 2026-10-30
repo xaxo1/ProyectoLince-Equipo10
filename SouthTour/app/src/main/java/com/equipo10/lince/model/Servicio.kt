@@ -29,10 +29,16 @@ data class Servicio(
     val conAtraso: Boolean = false,             // true si el check-in no fue 15 min antes del pickup
     val tipo: TipoServicio = TipoServicio.TOUR,
     val vehiculo: String? = null,               // vehículo asignado al servicio
-    val motivoCancelacion: String? = null       // solo si está CANCELADO
+    val motivoCancelacion: String? = null,      // solo si está CANCELADO
+    val ubicacionCheckIn: String? = null,       // coordenadas GPS del check-in
+    val ubicacionCheckOut: String? = null       // coordenadas GPS del check-out
 ) : Informable {
 
     override fun informar(): String = "$excursion · $horaPickup · $pasajeros pasajeros"
+
+    /** Búsqueda del Calendario: excursión, agencia, N° de reserva o punto de pickup (sin importar mayúsculas). */
+    fun coincideConBusqueda(texto: String): Boolean =
+        listOf(excursion, agencia, numeroReserva, puntoPickup).any { it.contains(texto, ignoreCase = true) }
 }
 
 /** FUNCIÓN DE EXTENSIÓN + groupBy: agrupa los servicios por fecha (para el Calendario). */

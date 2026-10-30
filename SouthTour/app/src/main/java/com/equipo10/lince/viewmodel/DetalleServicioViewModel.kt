@@ -3,10 +3,12 @@ package com.equipo10.lince.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.equipo10.lince.data.RepositorioLince
+import com.equipo10.lince.data.UbicacionDispositivo
 import com.equipo10.lince.model.DetalleUiState
 import com.equipo10.lince.model.EstadoServicio
 import com.equipo10.lince.model.Servicio
 import com.equipo10.lince.util.Formatos
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +24,10 @@ class DetalleServicioViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(DetalleUiState())
     val uiState: StateFlow<DetalleUiState> = _uiState.asStateFlow()
 
+    private var observadorIncidencias: Job? = null
+
     fun cargar(idServicio: Int) {
+        observarIncidencias(idServicio)
         viewModelScope.launch {
             _uiState.update { it.copy(cargando = true, error = null) }
             RepositorioLince.obtenerServicio(idServicio)
@@ -42,22 +47,40 @@ class DetalleServicioViewModel : ViewModel() {
         }
     }
 
-    /** CONFIRMADO -> EN_CURSO (check-in) -> FINALIZADO (check-out). */
+    /** Room entrega un Flow: cada incidencia nueva aparece sola en el Detalle. */
+    private fun observarIncidencias(idServicio: Int) {
+        observadorIncidencias?.cancel()
+        observadorIncidencias = viewModelScope.launch {
+            RepositorioLince.observarIncidencias(idServicio).collect { lista ->
+                _uiState.update { it.copy(incidencias = lista) }
+            }
+        }
+    }
+
+    /**
+     * CONFIRMADO -> EN_CURSO (check-in) -> FINALIZADO (check-out).
+     * Antes de registrar se lee el GPS. Si no hay ubicación (permiso denegado o sin señal),
+     * el registro igual se hace con la hora y se avisa al usuario.
+     */
     fun avanzarEstado() {
         val actual = _uiState.value
         val servicio = actual.servicio ?: return
         if (actual.procesando) return
 
-        _uiState.update { it.copy(procesando = true) }
+        _uiState.update { it.copy(procesando = true, mensaje = "Obteniendo ubicación GPS...", mensajeEsAlerta = false) }
         viewModelScope.launch {
-            RepositorioLince.avanzarEstado(servicio.id)
+            val ubicacion = UbicacionDispositivo.obtenerUbicacion()
+            val sinUbicacion = ubicacion.exceptionOrNull()?.let { " Registrado sin ubicación: ${it.message}." }
+
+            RepositorioLince.avanzarEstado(servicio.id, ubicacion.getOrNull())
                 .onSuccess { actualizado ->
                     _uiState.update {
                         it.copy(
                             procesando = false,
                             servicio = actualizado,
-                            mensaje = mensajeTrasAvanzar(actualizado),
-                            mensajeEsAlerta = actualizado.estado == EstadoServicio.EN_CURSO && actualizado.conAtraso
+                            mensaje = mensajeTrasAvanzar(actualizado) + sinUbicacion.orEmpty(),
+                            mensajeEsAlerta = (actualizado.estado == EstadoServicio.EN_CURSO && actualizado.conAtraso) ||
+                                sinUbicacion != null
                         )
                     }
                 }

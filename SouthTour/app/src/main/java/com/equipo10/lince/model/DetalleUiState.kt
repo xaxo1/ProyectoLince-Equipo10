@@ -7,5 +7,6 @@ data class DetalleUiState(
     val procesando: Boolean = false,                      // mientras se registra el check-in/out
     val mensaje: String = "Cargando servicio...",         // mensaje para el usuario (como en la Clase 6)
     val mensajeEsAlerta: Boolean = false,                 // true -> se pinta en color Alerta
+    val incidencias: List<Incidencia> = emptyList(),      // incidencias guardadas en Room
     val error: String? = null                             // error al cargar
 )
