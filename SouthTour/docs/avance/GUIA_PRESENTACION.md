@@ -30,13 +30,25 @@
 | Colecciones (filter, map, groupBy, count, sumOf, fold, find) | `RepositorioLince`, `InicioUiState` |
 | Corrutinas (suspend, launch, async) | `RepositorioLince`, `InicioViewModel` |
 | try-catch-finally y Result | `PerfilViewModel`, `RepositorioLince.login()` |
+| Room: Entity, DAO, Database | `data/local/*Entity.kt`, `data/local/*Dao.kt`, `data/local/LinceDatabase.kt` |
+| Room: Repository | `RepositorioLince` mezcla los datos ficticios con lo guardado en Room (`conRegistro()`) |
+| Room + Flow | `IncidenciaDao.observarDelServicio()` → `DetalleServicioViewModel.observarIncidencias()` |
+| Permisos en tiempo de ejecución | `DetalleServicioScreen` (`RequestMultiplePermissions`) + `AndroidManifest.xml` |
+| Recurso nativo: GPS | `data/UbicacionDispositivo.kt` (`LocationManagerCompat.getCurrentLocation`) |
+| Recurso nativo: cámara | `IncidenciaScreen` (`TakePicturePreview`) → `RepositorioLince.guardarFoto()` |
+| Validación de formularios | `IncidenciaViewModel.validarDescripcion()` / `validarPasajeros()`, `LoginViewModel.validarIdentificador()` |
+| Búsqueda + filtro | `ServiciosViewModel.aplicarFiltro()` (combina estado + texto) |
 
 ## Recorrido para la demo
-1. Login con una clave incorrecta (aviso rojo) → Reintentar → `15.482.910-K` / `1234`.
-2. Hoy: revisar las tarjetas → "Iniciar check-in" en "Santiago de Noche" (19:00).
-3. En el Detalle: iniciar servicio (a tiempo) → finalizar servicio.
-4. Ver reserva completa.
-5. Calendario → filtros.
-6. Disponibilidad: bloquear un día de esta semana (error) y uno a más de 7 días (éxito).
-7. Resumen: total con cancelados pagados y puntualidad; mes anterior.
-8. Avatar → Mi perfil → Cerrar sesión.
+1. Login: "Ingresar" con los campos vacíos (error bajo cada campo) → RUT `123-4` (error de formato) → clave incorrecta (aviso rojo) → `15.482.910-K` / `1234`.
+2. Hoy: "Iniciar check-in" en un servicio de hoy.
+3. Detalle: "Iniciar servicio" → **permitir ubicación** → aparece la hora y las coordenadas GPS del check-in.
+4. "Reportar incidencia": guardar vacío (errores por campo) → "Pasajero ausente" con todos los pasajeros (regla de negocio) → completar bien → **tomar foto** → guardar → confirmación → la incidencia aparece en el Detalle.
+5. **Persistencia**: cerrar la app por completo (deslizarla desde recientes), volver a entrar → el check-in, la ubicación y la incidencia siguen ahí (Room).
+6. "Finalizar servicio" (check-out con su propia ubicación). Ver reserva completa.
+7. Calendario: buscar "maipo" o "SB-24290" + cambiar filtros.
+8. Disponibilidad: bloquear un día de esta semana (error) y uno a más de 7 días (éxito); se conserva al reiniciar.
+9. Resumen: total con cancelados pagados y puntualidad (incluye el servicio recién finalizado).
+10. Avatar → Mi perfil → Cerrar sesión.
+
+> En el emulador, la ubicación se cambia en *Extended controls (⋯) → Location*. La cámara del emulador muestra una escena virtual.
