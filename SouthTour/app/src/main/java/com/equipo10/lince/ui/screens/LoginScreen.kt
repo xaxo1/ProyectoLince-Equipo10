@@ -157,13 +157,16 @@ fun LoginScreen(
                     singleLine = true,
                     shape = MaterialTheme.shapes.small,
                     colors = coloresCampo,
+                    isError = estado.errorIdentificador != null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                     modifier = Modifier.fillMaxWidth()
                 )
+                // Error de validación del campo (o el texto de ayuda si no hay error)
                 Text(
-                    "Para transportistas de flota o guías de expedición",
+                    estado.errorIdentificador ?: "Para transportistas de flota o guías de expedición",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (estado.errorIdentificador != null) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 4.dp)
                 )
 
@@ -186,9 +189,18 @@ fun LoginScreen(
                     shape = MaterialTheme.shapes.small,
                     colors = coloresCampo,
                     visualTransformation = if (claveVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    isError = estado.errorClave != null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
                     modifier = Modifier.fillMaxWidth()
                 )
+                estado.errorClave?.let { mensaje ->
+                    Text(
+                        mensaje,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
 
                 Spacer(Modifier.height(20.dp))
                 Button(
