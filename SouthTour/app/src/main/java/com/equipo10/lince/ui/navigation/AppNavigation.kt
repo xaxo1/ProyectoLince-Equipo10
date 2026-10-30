@@ -44,6 +44,7 @@ import com.equipo10.lince.data.RepositorioLince
 import com.equipo10.lince.ui.components.Avatar
 import com.equipo10.lince.ui.screens.DetalleServicioScreen
 import com.equipo10.lince.ui.screens.DisponibilidadScreen
+import com.equipo10.lince.ui.screens.IncidenciaScreen
 import com.equipo10.lince.ui.screens.InicioScreen
 import com.equipo10.lince.ui.screens.LoginScreen
 import com.equipo10.lince.ui.screens.PerfilScreen
@@ -183,8 +184,16 @@ fun LinceApp() {
                 val servicioId = entrada.arguments?.getInt(Ruta.Detalle.ARG_ID) ?: -1
                 DetalleServicioScreen(
                     servicioId = servicioId,
-                    onVerReserva = { numero -> navController.navigate(Ruta.Reserva.crear(numero)) }
+                    onVerReserva = { numero -> navController.navigate(Ruta.Reserva.crear(numero)) },
+                    onReportarIncidencia = { id -> navController.navigate(Ruta.Incidencia.crear(id)) }
                 )
+            }
+            composable(
+                route = Ruta.Incidencia.ruta,
+                arguments = listOf(navArgument(Ruta.Incidencia.ARG_ID) { type = NavType.IntType })
+            ) { entrada ->
+                val servicioId = entrada.arguments?.getInt(Ruta.Incidencia.ARG_ID) ?: -1
+                IncidenciaScreen(servicioId = servicioId, onListo = { navController.popBackStack() })
             }
             composable(
                 route = Ruta.Reserva.ruta,

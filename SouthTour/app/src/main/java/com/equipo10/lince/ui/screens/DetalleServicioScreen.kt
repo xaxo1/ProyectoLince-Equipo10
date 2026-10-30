@@ -1,5 +1,11 @@
 package com.equipo10.lince.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -13,7 +19,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -22,14 +33,21 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.equipo10.lince.model.DetalleUiState
 import com.equipo10.lince.model.EstadoServicio
+import com.equipo10.lince.model.Incidencia
 import com.equipo10.lince.model.Servicio
 import com.equipo10.lince.ui.components.BannerMensaje
 import com.equipo10.lince.ui.components.CargandoContenido
@@ -48,9 +66,24 @@ import com.equipo10.lince.viewmodel.DetalleServicioViewModel
 fun DetalleServicioScreen(
     servicioId: Int,
     onVerReserva: (String) -> Unit,
+    onReportarIncidencia: (Int) -> Unit,
     viewModel: DetalleServicioViewModel = viewModel()
 ) {
     val estado by viewModel.uiState.collectAsStateWithLifecycle()
+    val contexto = LocalContext.current
+
+    // PERMISO de ubicación en tiempo de ejecución: se pide la primera vez que se hace check-in.
+    // Con o sin permiso se registra el check-in; sin permiso queda sin coordenadas (y se avisa).
+    val lanzadorPermiso = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { _ -> viewModel.avanzarEstado() }
+
+    val onAvanzar = {
+        val tienePermiso = PERMISOS_UBICACION.any {
+            ContextCompat.checkSelfPermission(contexto, it) == PackageManager.PERMISSION_GRANTED
+        }
+        if (tienePermiso) viewModel.avanzarEstado() else lanzadorPermiso.launch(PERMISOS_UBICACION)
+    }
 
     // El id llega como argumento de la ruta "detalle/{servicioId}"
     LaunchedEffect(servicioId) { viewModel.cargar(servicioId) }
@@ -63,18 +96,25 @@ fun DetalleServicioScreen(
         servicio != null -> ContenidoDetalle(
             estado = estado,
             servicio = servicio,
-            onAvanzar = viewModel::avanzarEstado,
-            onVerReserva = { onVerReserva(servicio.numeroReserva) }
+            onAvanzar = onAvanzar,
+            onVerReserva = { onVerReserva(servicio.numeroReserva) },
+            onReportarIncidencia = { onReportarIncidencia(servicio.id) }
         )
     }
 }
+
+private val PERMISOS_UBICACION = arrayOf(
+    Manifest.permission.ACCESS_FINE_LOCATION,
+    Manifest.permission.ACCESS_COARSE_LOCATION
+)
 
 @Composable
 private fun ContenidoDetalle(
     estado: DetalleUiState,
     servicio: Servicio,
     onAvanzar: () -> Unit,
-    onVerReserva: () -> Unit
+    onVerReserva: () -> Unit,
+    onReportarIncidencia: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -100,12 +140,16 @@ private fun ContenidoDetalle(
         // ---------- Check-in / Check-out ----------
         Seccion("Check-in / Check-out") {
             FilaDetalle("Check-in", servicio.horaCheckIn ?: "Pendiente")
+            servicio.ubicacionCheckIn?.let { FilaDetalle("Ubicación check-in", it) }
             FilaDetalle("Check-out", servicio.horaCheckOut ?: "Pendiente")
-            Text(
-                "La ubicación GPS se registrará en una próxima entrega.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            servicio.ubicacionCheckOut?.let { FilaDetalle("Ubicación check-out", it) }
+            if (servicio.estado == EstadoServicio.CONFIRMADO) {
+                Text(
+                    "Al iniciar se registrará la hora y tu ubicación GPS.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
             // El texto del botón cambia según el estado (WHEN)
             val textoBoton: String? = when (servicio.estado) {
@@ -133,6 +177,31 @@ private fun ContenidoDetalle(
                 }
             }
             // Sin botón "Reiniciar": un check-in/check-out registrado no se puede modificar (trazabilidad)
+        }
+
+        // ---------- Incidencias (Room + cámara) ----------
+        Seccion("Incidencias (${estado.incidencias.size})") {
+            val iniciado = servicio.estado == EstadoServicio.EN_CURSO || servicio.estado == EstadoServicio.FINALIZADO
+            if (estado.incidencias.isEmpty()) {
+                Text("Sin incidencias reportadas.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            estado.incidencias.forEachIndexed { indice, incidencia ->
+                if (indice > 0) HorizontalDivider()
+                FilaIncidencia(incidencia)
+            }
+            if (iniciado) {
+                OutlinedButton(onClick = onReportarIncidencia, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Filled.ReportProblem, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Reportar incidencia")
+                }
+            } else if (servicio.estado == EstadoServicio.CONFIRMADO) {
+                Text(
+                    "Podrás reportar incidencias después del check-in.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         // ---------- Pickup y drop off ----------
@@ -175,6 +244,33 @@ private fun ContenidoDetalle(
             } else {
                 servicio.requisitos.forEach { requisito -> Text("• $requisito") }
             }
+        }
+    }
+}
+
+/** Una incidencia guardada en Room, con la miniatura de su foto si tiene. */
+@Composable
+private fun FilaIncidencia(incidencia: Incidencia) {
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        // La foto se lee del archivo guardado; remember evita decodificarla en cada recomposición
+        val foto = remember(incidencia.rutaFoto) { incidencia.rutaFoto?.let { BitmapFactory.decodeFile(it) } }
+        foto?.let {
+            Image(
+                bitmap = it.asImageBitmap(),
+                contentDescription = "Foto de la incidencia",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(56.dp).clip(MaterialTheme.shapes.small)
+            )
+        }
+        Column(Modifier.weight(1f)) {
+            Text(incidencia.tipo.etiqueta, fontWeight = FontWeight.SemiBold)
+            Text(incidencia.descripcion, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                "${Formatos.fechaCorta(incidencia.registradaEn.substringBefore(" "))} " +
+                    "${incidencia.registradaEn.substringAfter(" ")} · ${incidencia.pasajerosPresentes} pasajeros presentes",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

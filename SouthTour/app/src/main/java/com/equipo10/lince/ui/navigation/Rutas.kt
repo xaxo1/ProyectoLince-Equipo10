@@ -30,12 +30,18 @@ sealed class Ruta(val ruta: String, val titulo: String) {
         const val ARG_NUMERO = "numeroReserva"
         fun crear(numero: String): String = "reserva/$numero"
     }
+
+    /** Formulario de incidencia de un servicio ("incidencia/101"). */
+    data object Incidencia : Ruta("incidencia/{servicioId}", "Reportar incidencia") {
+        const val ARG_ID = "servicioId"
+        fun crear(servicioId: Int): String = "incidencia/$servicioId"
+    }
 }
 
 /** Todas las rutas que muestran la barra superior (todas menos Login). */
 val rutasConBarraSuperior: List<Ruta> = listOf(
     Ruta.Inicio, Ruta.Servicios, Ruta.Disponibilidad, Ruta.Resumen,
-    Ruta.Perfil, Ruta.Detalle, Ruta.Reserva
+    Ruta.Perfil, Ruta.Detalle, Ruta.Reserva, Ruta.Incidencia
 )
 
 data class ItemMenu(val ruta: Ruta, val etiqueta: String, val icono: ImageVector)
