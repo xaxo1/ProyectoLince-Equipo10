@@ -13,7 +13,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,6 +56,7 @@ fun ServiciosScreen(
         else -> CalendarioServicios(
             estado = estado,
             onFiltro = viewModel::cambiarFiltro,
+            onBusqueda = viewModel::cambiarBusqueda,
             onVerDetalle = onVerDetalle
         )
     }
@@ -60,9 +67,30 @@ fun ServiciosScreen(
 private fun CalendarioServicios(
     estado: ServiciosUiState,
     onFiltro: (FiltroServicios) -> Unit,
+    onBusqueda: (String) -> Unit,
     onVerDetalle: (Int) -> Unit
 ) {
     Column(Modifier.fillMaxSize()) {
+        // Buscador: filtra en vivo por excursión, agencia, N° de reserva o punto de pickup
+        OutlinedTextField(
+            value = estado.busqueda,
+            onValueChange = onBusqueda,
+            placeholder = { Text("Buscar excursión, agencia o reserva") },
+            leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+            trailingIcon = {
+                if (estado.busqueda.isNotEmpty()) {
+                    IconButton(onClick = { onBusqueda("") }) {
+                        Icon(Icons.Filled.Close, contentDescription = "Borrar búsqueda")
+                    }
+                }
+            },
+            singleLine = true,
+            shape = MaterialTheme.shapes.medium,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 12.dp)
+        )
+
         // Filtros (FilterChip de Material 3); el seleccionado usa el turquesa suave
         Row(
             modifier = Modifier
@@ -89,7 +117,11 @@ private fun CalendarioServicios(
 
         if (estado.porFecha.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No hay servicios en esta categoría.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    if (estado.busqueda.isBlank()) "No hay servicios en esta categoría."
+                    else "No hay servicios que coincidan con \"${estado.busqueda.trim()}\".",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         } else {
             LazyColumn(

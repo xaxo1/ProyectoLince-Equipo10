@@ -14,6 +14,7 @@ data class ServiciosUiState(
     val cargando: Boolean = true,
     val porFecha: Map<String, List<Servicio>> = emptyMap(),   // MAP: fecha -> servicios de ese día
     val filtro: FiltroServicios = FiltroServicios.PROXIMOS,
+    val busqueda: String = "",                                 // texto del buscador
     val cantidad: Int = 0,
     val total: Int = 0,
     val error: String? = null

@@ -42,6 +42,12 @@ class ServiciosViewModel : ViewModel() {
         aplicarFiltro(filtro)
     }
 
+    /** Búsqueda en vivo: se vuelve a filtrar cada vez que cambia el texto. */
+    fun cambiarBusqueda(texto: String) {
+        _uiState.update { it.copy(busqueda = texto) }
+        aplicarFiltro(_uiState.value.filtro)
+    }
+
     private fun aplicarFiltro(filtro: FiltroServicios) {
         // FUNCIÓN DE ORDEN SUPERIOR: el criterio de filtrado se guarda en una variable
         val criterio: (Servicio) -> Boolean = when (filtro) {
@@ -52,7 +58,11 @@ class ServiciosViewModel : ViewModel() {
             FiltroServicios.TODOS -> { _ -> true }
         }
 
-        val filtrados = todos.filter(criterio)
+        // Se combinan los dos criterios: filtro por estado + texto del buscador
+        val texto = _uiState.value.busqueda.trim()
+        val filtrados = todos
+            .filter(criterio)
+            .filter { texto.isEmpty() || it.coincideConBusqueda(texto) }
         // Próximos: del más cercano al más lejano. Historial: del más reciente al más antiguo.
         val ordenados = if (filtro == FiltroServicios.PROXIMOS) {
             filtrados.sortedBy { it.fecha + it.horaPickup }
