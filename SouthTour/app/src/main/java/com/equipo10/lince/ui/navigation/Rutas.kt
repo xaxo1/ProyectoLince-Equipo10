@@ -1,9 +1,10 @@
 package com.equipo10.lince.ui.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.EventAvailable
+import androidx.compose.material.icons.filled.Today
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /** Nombre visible de la app: si cambia, se modifica SOLO aquí. */
@@ -12,10 +13,11 @@ const val NOMBRE_APP = "SouthTour"
 /** SEALED CLASS con todas las rutas: evita errores de tipeo en los strings de navegación. */
 sealed class Ruta(val ruta: String, val titulo: String) {
     data object Login : Ruta("login", "Iniciar sesión")
-    data object Inicio : Ruta("inicio", "Servicios del día")
-    data object Servicios : Ruta("servicios", "Calendario de servicios")
-    data object Perfil : Ruta("perfil", "Mi perfil")
+    data object Inicio : Ruta("hoy", "Hoy")
+    data object Servicios : Ruta("calendario", "Calendario")
     data object Disponibilidad : Ruta("disponibilidad", "Disponibilidad")
+    data object Resumen : Ruta("resumen", "Resumen")
+    data object Perfil : Ruta("perfil", "Mi perfil")
 
     /** Ruta con ARGUMENTO Int: el id del servicio viaja en la ruta ("detalle/101"). */
     data object Detalle : Ruta("detalle/{servicioId}", "Detalle del servicio") {
@@ -32,14 +34,19 @@ sealed class Ruta(val ruta: String, val titulo: String) {
 
 /** Todas las rutas que muestran la barra superior (todas menos Login). */
 val rutasConBarraSuperior: List<Ruta> = listOf(
-    Ruta.Inicio, Ruta.Servicios, Ruta.Perfil, Ruta.Disponibilidad, Ruta.Detalle, Ruta.Reserva
+    Ruta.Inicio, Ruta.Servicios, Ruta.Disponibilidad, Ruta.Resumen,
+    Ruta.Perfil, Ruta.Detalle, Ruta.Reserva
 )
 
 data class ItemMenu(val ruta: Ruta, val etiqueta: String, val icono: ImageVector)
 
-/** Opciones de la NavigationBar inferior (flujo pedido: Inicio -> Servicios -> Perfil). */
+/**
+ * NavigationBar con los 4 destinos definidos en la evidencia de la Clase 2:
+ * Hoy, Calendario, Disponibilidad y Resumen. El Perfil se abre desde el avatar.
+ */
 val itemsMenu: List<ItemMenu> = listOf(
-    ItemMenu(Ruta.Inicio, "Inicio", Icons.Filled.Home),
-    ItemMenu(Ruta.Servicios, "Servicios", Icons.Filled.DateRange),
-    ItemMenu(Ruta.Perfil, "Perfil", Icons.Filled.Person)
+    ItemMenu(Ruta.Inicio, "Hoy", Icons.Filled.Today),
+    ItemMenu(Ruta.Servicios, "Calendario", Icons.Filled.DateRange),
+    ItemMenu(Ruta.Disponibilidad, "Disponibilidad", Icons.Filled.EventAvailable),
+    ItemMenu(Ruta.Resumen, "Resumen", Icons.Filled.Assessment)
 )

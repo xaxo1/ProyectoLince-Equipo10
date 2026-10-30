@@ -1,52 +1,54 @@
-# Dónde está cada requisito (para la presentación)
+# Guía para la presentación del avance
 
-## Clase 6 · ViewModel + Estado + StateFlow
-| Requisito de la guía | Dónde está |
+## Qué se integró del diseño de Google Stitch
+| Pantalla de Stitch | En la app |
 |---|---|
-| Dependencias lifecycle-viewmodel-compose y lifecycle-runtime-compose 2.11.0 | app/build.gradle.kts y gradle/libs.versions.toml |
-| Estructura MVVM (model / viewmodel / ui) | carpetas del paquete com.equipo10.lince |
-| Modelo (data class) | model/Servicio.kt (como OrdenTrabajo) |
-| Estado completo de la pantalla con valores por defecto | model/DetalleUiState.kt (como OrdenUiState) y los demás *UiState.kt |
-| MutableStateFlow privado + StateFlow público con asStateFlow() | todos los archivos de viewmodel/ |
-| update { actual -> actual.copy(...) } | DetalleServicioViewModel.avanzarEstado() |
-| Cambio de estado con when (Pendiente -> En proceso -> Finalizada) | RepositorioLince.avanzarEstado(): Confirmado -> En curso -> Finalizado |
-| mensaje en el estado ("Estado actualizado a ...") | DetalleUiState.mensaje + BannerMensaje |
-| reiniciar() | DetalleServicioViewModel.reiniciar() + botón "Reiniciar estado" |
-| collectAsStateWithLifecycle() + viewModel() | todas las pantallas de ui/screens/ |
+| iniciar_sesion | `ui/screens/LoginScreen.kt` (logo moái, RUT o correo, aviso de fallo de autenticación) |
+| servicios_del_dia | `ui/screens/InicioScreen.kt` (hora de recogida, estados, check-in, cancelado pagado, fin de jornada) |
+| resumen_mensual | `ui/screens/ResumenScreen.kt` (total del mes, completados, cancelados pagados, detalle) + puntualidad |
+| NavigationBar (todas) | `ui/navigation/AppNavigation.kt`: Hoy · Calendario · Disponibilidad · Resumen; perfil desde el avatar |
+| DESIGN.md "Atacama Fieldwork" | `ui/theme/` y `ui/components/ComponentesComunes.kt` (tarjetas con borde arena, píldoras de estado sólidas, botones redondeados) |
 
-## Clases 3, 4 y 5 · MVVM, Material 3 y Navigation Compose
-| Requisito | Dónde está |
+## Requisitos del cliente (reunión 11/09) y dónde se cumplen
+| Requisito | Dónde |
 |---|---|
-| Proyecto Android Studio con Kotlin y Compose | proyecto completo |
-| Material 3 (Scaffold, TopAppBar, NavigationBar, Card, Button, TextField, FilterChip) | ui/navigation/AppNavigation.kt y ui/screens/ |
-| Identidad visual del equipo | ui/theme/Color.kt y Theme.kt (paleta SouthTour) |
-| Navegación Login -> Inicio -> Servicios -> Perfil | ui/navigation/AppNavigation.kt |
-| Avanzar y volver | flecha de la TopAppBar + botón atrás + popUpTo |
-| Rutas con argumentos | detalle/{servicioId} (Int) y reserva/{numeroReserva} (String) |
-| Cada pantalla en su archivo | ui/screens/ |
-| Modelos de datos | model/ |
-| Datos ficticios | data/RepositorioLince.kt |
+| Ver lo asignado sin llamadas | Hoy y Calendario |
+| Requisitos de la agencia | Detalle del servicio |
+| Controlar atrasos (15 min antes del pickup) | `Formatos.llegaConAtraso()` + `RepositorioLince.avanzarEstado()` |
+| Premiar puntuales | Resumen: % de puntualidad |
+| Bloqueo con una semana de anticipación | `RepositorioLince.bloquearDia()` |
+| Cancelados igual se pagan | `RepositorioLince.obtenerResumen()` |
+| Check-in no modificable (trazabilidad) | Sin botón "Reiniciar" en el Detalle |
 
-## Contenidos de los PPT de Kotlin
-| Contenido | Ejemplo en el código |
+## Contenidos del ramo
+| Contenido | Ejemplo |
 |---|---|
-| val / var, null safety (?. ?: !!), when | Servicio.contraparte, Transportista.vehiculo, colorEstado() |
-| Colecciones: filter, map, find, any, count, groupBy, sortedBy, associateBy, fold | RepositorioLince, agruparPorFecha(), montoTotal() |
-| Funciones de orden superior y lambdas | criterio en ServiciosViewModel, Seccion(contenido) |
-| Funciones de extensión | List<Servicio>.agruparPorFecha(), NavHostController.navegarSeccion() |
-| POO: open class, herencia, override, interface, private | Usuario -> Guia / Transportista, Informable |
-| try - catch - finally | PerfilViewModel.cargar() |
-| Excepciones personalizadas y Result | model/Excepciones.kt, RepositorioLince.login() |
-| Corrutinas: suspend, launch, async/await, delay | RepositorioLince, InicioViewModel (2 consultas en paralelo) |
-| data class + copy(), enum class, sealed class | Servicio, EstadoServicio, Ruta |
-| Funciones de ámbito: apply, also, let, with | asignaciones, login(), textoBoton?.let, TarjetaServicio |
+| Clase 6: UiState + MutableStateFlow privado + StateFlow público + update{copy} | `model/*UiState.kt` y `viewmodel/` |
+| collectAsStateWithLifecycle() | todas las pantallas |
+| Navigation Compose con argumentos | `detalle/{servicioId}`, `reserva/{numeroReserva}` |
+| POO, herencia, polimorfismo | `Usuario` → `Guia` / `Transportista`, `informar()` |
+| Colecciones (filter, map, groupBy, count, sumOf, fold, find) | `RepositorioLince`, `InicioUiState` |
+| Corrutinas (suspend, launch, async) | `RepositorioLince`, `InicioViewModel` |
+| try-catch-finally y Result | `PerfilViewModel`, `RepositorioLince.login()` |
+| Room: Entity, DAO, Database | `data/local/*Entity.kt`, `data/local/*Dao.kt`, `data/local/LinceDatabase.kt` |
+| Room: Repository | `RepositorioLince` mezcla los datos ficticios con lo guardado en Room (`conRegistro()`) |
+| Room + Flow | `IncidenciaDao.observarDelServicio()` → `DetalleServicioViewModel.observarIncidencias()` |
+| Permisos en tiempo de ejecución | `DetalleServicioScreen` (`RequestMultiplePermissions`) + `AndroidManifest.xml` |
+| Recurso nativo: GPS | `data/UbicacionDispositivo.kt` (`LocationManagerCompat.getCurrentLocation`) |
+| Recurso nativo: cámara | `IncidenciaScreen` (`TakePicturePreview`) → `RepositorioLince.guardarFoto()` |
+| Validación de formularios | `IncidenciaViewModel.validarDescripcion()` / `validarPasajeros()`, `LoginViewModel.validarIdentificador()` |
+| Búsqueda + filtro | `ServiciosViewModel.aplicarFiltro()` (combina estado + texto) |
 
-## Recorrido sugerido para la demo
-1. Login con una clave incorrecta (mensaje de error) y luego guia@southbound.cl / 1234.
-2. Servicios del día -> tocar "Santiago de Noche" (19:00) -> Iniciar servicio (check-in a tiempo).
-3. Volver y abrir "Full Day Valparaíso" (08:00) -> Iniciar servicio (si ya pasaron las 07:45 sale ATRASO).
-4. Finalizar servicio (check-out) -> Reiniciar estado.
-5. Ver reserva completa.
-6. Calendario -> probar filtros.
-7. Disponibilidad -> intentar bloquear un día de esta semana (error) y uno de dentro de 10 días (éxito).
-8. Perfil -> Resumen mensual (sube "Realizados" si hicieron un check-out) -> Cerrar sesión.
+## Recorrido para la demo
+1. Login: "Ingresar" con los campos vacíos (error bajo cada campo) → RUT `123-4` (error de formato) → clave incorrecta (aviso rojo) → `15.482.910-K` / `1234`.
+2. Hoy: "Iniciar check-in" en un servicio de hoy.
+3. Detalle: "Iniciar servicio" → **permitir ubicación** → aparece la hora y las coordenadas GPS del check-in.
+4. "Reportar incidencia": guardar vacío (errores por campo) → "Pasajero ausente" con todos los pasajeros (regla de negocio) → completar bien → **tomar foto** → guardar → confirmación → la incidencia aparece en el Detalle.
+5. **Persistencia**: cerrar la app por completo (deslizarla desde recientes), volver a entrar → el check-in, la ubicación y la incidencia siguen ahí (Room).
+6. "Finalizar servicio" (check-out con su propia ubicación). Ver reserva completa.
+7. Calendario: buscar "maipo" o "SB-24290" + cambiar filtros.
+8. Disponibilidad: bloquear un día de esta semana (error) y uno a más de 7 días (éxito); se conserva al reiniciar.
+9. Resumen: total con cancelados pagados y puntualidad (incluye el servicio recién finalizado).
+10. Avatar → Mi perfil → Cerrar sesión.
+
+> En el emulador, la ubicación se cambia en *Extended controls (⋯) → Location*. La cámara del emulador muestra una escena virtual.

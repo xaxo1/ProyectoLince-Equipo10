@@ -17,7 +17,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -43,7 +42,7 @@ import com.equipo10.lince.viewmodel.DetalleServicioViewModel
 /**
  * "Detalle del servicio" + "Check-in / Check-out".
  * Aplica la Clase 6: la pantalla observa el StateFlow y los botones llaman a
- * avanzarEstado() y reiniciar() del ViewModel.
+ * avanzarEstado() del ViewModel (el check-in no se puede deshacer: requisito de trazabilidad).
  */
 @Composable
 fun DetalleServicioScreen(
@@ -65,7 +64,6 @@ fun DetalleServicioScreen(
             estado = estado,
             servicio = servicio,
             onAvanzar = viewModel::avanzarEstado,
-            onReiniciar = viewModel::reiniciar,
             onVerReserva = { onVerReserva(servicio.numeroReserva) }
         )
     }
@@ -76,7 +74,6 @@ private fun ContenidoDetalle(
     estado: DetalleUiState,
     servicio: Servicio,
     onAvanzar: () -> Unit,
-    onReiniciar: () -> Unit,
     onVerReserva: () -> Unit
 ) {
     Column(
@@ -135,13 +132,7 @@ private fun ContenidoDetalle(
                     }
                 }
             }
-            OutlinedButton(
-                onClick = onReiniciar,
-                enabled = !estado.procesando,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Reiniciar estado")
-            }
+            // Sin botón "Reiniciar": un check-in/check-out registrado no se puede modificar (trazabilidad)
         }
 
         // ---------- Pickup y drop off ----------
