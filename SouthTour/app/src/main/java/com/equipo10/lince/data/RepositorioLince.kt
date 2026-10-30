@@ -14,6 +14,7 @@ import com.equipo10.lince.model.Reserva
 import com.equipo10.lince.model.ReservaNoEncontradaException
 import com.equipo10.lince.model.ResumenMensual
 import com.equipo10.lince.model.Servicio
+import com.equipo10.lince.model.TipoServicio
 import com.equipo10.lince.model.ServicioNoEncontradoException
 import com.equipo10.lince.model.SesionNoIniciadaException
 import com.equipo10.lince.model.Transportista
@@ -41,9 +42,9 @@ object RepositorioLince {
 
     // ======================= USUARIOS =======================
     private val usuarios: List<Usuario> = listOf(
-        Guia(1, "Camila Soto", "guia@southbound.cl", "1234",
+        Guia(1, "Camila Soto", "15.482.910-K", "guia@southbound.cl", "1234",
             idiomas = listOf("Español", "Inglés", "Portugués")),
-        Transportista(2, "Jorge Muñoz", "transportista@southbound.cl", "1234",
+        Transportista(2, "Jorge Muñoz", "12.345.678-5", "transportista@southbound.cl", "1234",
             licencia = "A3", vehiculo = "Mercedes Sprinter · KXTR-21")
     )
 
@@ -66,7 +67,8 @@ object RepositorioLince {
             pasajeros = 12, contraparte = "Transportista: Jorge Muñoz · Sprinter KXTR-21",
             requisitos = listOf("Guion en inglés y portugués", "Almuerzo incluido en Viña del Mar",
                 "Cartel con el logo de la agencia"),
-            monto = 55000
+            monto = 55000,
+            vehiculo = "Mercedes Sprinter · KXTR-21"
         ))
         asignar(1, Servicio(
             id = 102, excursion = "Santiago de Noche y Barrio Lastarria", agencia = "Southbound Receptivo",
@@ -74,7 +76,8 @@ object RepositorioLince {
             puntoPickup = "Hotel Cumbres Lastarria", dropOff = "Hotel Cumbres Lastarria",
             pasajeros = 6, contraparte = "Transportista: Jorge Muñoz · Sprinter KXTR-21",
             requisitos = listOf("Cena incluida (2 pasajeros vegetarianos)"),
-            monto = 35000
+            monto = 35000,
+            vehiculo = "Mercedes Sprinter · KXTR-21"
         ))
         asignar(1, Servicio(
             id = 103, excursion = "Cajón del Maipo y Embalse El Yeso", agencia = "Patagonia Experiences",
@@ -82,7 +85,8 @@ object RepositorioLince {
             puntoPickup = "Hotel Mandarin Oriental", dropOff = "Hotel Mandarin Oriental",
             pasajeros = 8, contraparte = "Transportista: Jorge Muñoz · Sprinter KXTR-21",
             requisitos = listOf("Ropa de abrigo", "Pasaporte para control fronterizo"),
-            monto = 50000
+            monto = 50000,
+            vehiculo = "Mercedes Sprinter · KXTR-21"
         ))
         asignar(1, Servicio(
             id = 104, excursion = "Ruta del Vino Valle de Colchagua", agencia = "Wine Tours Chile",
@@ -90,34 +94,39 @@ object RepositorioLince {
             puntoPickup = "Hotel The Singular", dropOff = "Hotel The Singular",
             pasajeros = 10, contraparte = null,
             requisitos = listOf("Pasajeros mayores de 18 años", "Degustación en 2 viñas"),
-            monto = 60000
+            monto = 60000,
+            vehiculo = "Van Hyundai H350"
         ))
         asignar(1, Servicio(
             id = 105, excursion = "Isla Negra y Pomaire", agencia = "Andes Travel",
             numeroReserva = "SB-24290", fecha = fechaEnDias(32), horaPickup = "09:00",
             puntoPickup = "Hotel Plaza San Francisco", dropOff = "Hotel Plaza San Francisco",
-            pasajeros = 15, monto = 50000
+            pasajeros = 15, monto = 50000,
+            vehiculo = "Minibús Hyundai County"
         ))
         asignar(1, Servicio(
             id = 106, excursion = "City Tour Santiago", agencia = "Southbound Receptivo",
             numeroReserva = "SB-23950", fecha = fechaPasadaDelMes(3), horaPickup = "10:00",
             puntoPickup = "Hotel The Singular", dropOff = "Cerro San Cristóbal",
             pasajeros = 2, contraparte = "Transportista: Jorge Muñoz · Sprinter KXTR-21",
-            monto = 35000, estado = EstadoServicio.FINALIZADO, horaCheckIn = "09:40", horaCheckOut = "14:10"
+            monto = 35000, estado = EstadoServicio.FINALIZADO, horaCheckIn = "09:40", horaCheckOut = "14:10",
+            vehiculo = "Mercedes Sprinter · KXTR-21"
         ))
         asignar(1, Servicio(
             id = 107, excursion = "Portillo y Laguna del Inca", agencia = "Andes Travel",
             numeroReserva = "SB-23911", fecha = fechaPasadaDelMes(6), horaPickup = "07:00",
             puntoPickup = "Hotel Plaza San Francisco", dropOff = "Hotel Plaza San Francisco",
             pasajeros = 9, contraparte = "Transportista: Luis Pérez · Van JKLP-44",
-            monto = 60000, estado = EstadoServicio.CANCELADO
+            monto = 60000, estado = EstadoServicio.CANCELADO,
+            vehiculo = "Van Hyundai H350", motivoCancelacion = "Cierre del Paso Los Libertadores"
         ))
         asignar(1, Servicio(
             id = 108, excursion = "Valle de Casablanca", agencia = "Wine Tours Chile",
             numeroReserva = "SB-23870", fecha = fechaPasadaDelMes(10), horaPickup = "09:30",
             puntoPickup = "Hotel Cumbres Vitacura", dropOff = "Hotel Cumbres Vitacura",
             pasajeros = 7, monto = 55000, estado = EstadoServicio.FINALIZADO,
-            horaCheckIn = "09:20", horaCheckOut = "17:45", conAtraso = true
+            horaCheckIn = "09:20", horaCheckOut = "17:45", conAtraso = true,
+            vehiculo = "Van Hyundai H350"
         ))
 
         // ----- Transportista: Jorge Muñoz (usuario 2) -----
@@ -127,7 +136,8 @@ object RepositorioLince {
             puntoPickup = "Aeropuerto AMB · Puerta 3", dropOff = "Hotel Plaza San Francisco",
             pasajeros = 4, contraparte = null,
             requisitos = listOf("Cartel con el apellido JOHNSON", "4 maletas grandes"),
-            monto = 25000
+            monto = 25000,
+            tipo = TipoServicio.TRASLADO, vehiculo = "Mercedes Sprinter · KXTR-21"
         ))
         asignar(2, Servicio(
             id = 202, excursion = "Full Day Valparaíso y Viña del Mar", agencia = "Andes Travel",
@@ -135,14 +145,16 @@ object RepositorioLince {
             puntoPickup = "Hotel Plaza San Francisco", dropOff = "Hotel Plaza San Francisco",
             pasajeros = 12, contraparte = "Guía: Camila Soto · +56 9 8765 4321",
             requisitos = listOf("Vehículo con capacidad para 12 pasajeros"),
-            monto = 70000
+            monto = 70000,
+            vehiculo = "Mercedes Sprinter · KXTR-21"
         ))
         asignar(2, Servicio(
             id = 207, excursion = "Santiago de Noche y Barrio Lastarria", agencia = "Southbound Receptivo",
             numeroReserva = "SB-24044", fecha = fechaEnDias(0), horaPickup = "19:00",
             puntoPickup = "Hotel Cumbres Lastarria", dropOff = "Hotel Cumbres Lastarria",
             pasajeros = 6, contraparte = "Guía: Camila Soto · +56 9 8765 4321",
-            monto = 40000
+            monto = 40000,
+            vehiculo = "Mercedes Sprinter · KXTR-21"
         ))
         asignar(2, Servicio(
             id = 203, excursion = "Cajón del Maipo y Embalse El Yeso", agencia = "Patagonia Experiences",
@@ -150,27 +162,31 @@ object RepositorioLince {
             puntoPickup = "Hotel Mandarin Oriental", dropOff = "Hotel Mandarin Oriental",
             pasajeros = 8, contraparte = "Guía: Camila Soto · +56 9 8765 4321",
             requisitos = listOf("Llevar cadenas para nieve"),
-            monto = 65000
+            monto = 65000,
+            vehiculo = "Mercedes Sprinter · KXTR-21"
         ))
         asignar(2, Servicio(
             id = 204, excursion = "City Tour Santiago", agencia = "Southbound Receptivo",
             numeroReserva = "SB-23950", fecha = fechaPasadaDelMes(3), horaPickup = "10:00",
             puntoPickup = "Hotel The Singular", dropOff = "Cerro San Cristóbal",
             pasajeros = 2, contraparte = "Guía: Camila Soto · +56 9 8765 4321",
-            monto = 40000, estado = EstadoServicio.FINALIZADO, horaCheckIn = "09:35", horaCheckOut = "14:15"
+            monto = 40000, estado = EstadoServicio.FINALIZADO, horaCheckIn = "09:35", horaCheckOut = "14:15",
+            vehiculo = "Mercedes Sprinter · KXTR-21"
         ))
         asignar(2, Servicio(
             id = 205, excursion = "Portillo y Laguna del Inca", agencia = "Andes Travel",
             numeroReserva = "SB-23911", fecha = fechaPasadaDelMes(6), horaPickup = "07:00",
             puntoPickup = "Hotel Plaza San Francisco", dropOff = "Hotel Plaza San Francisco",
-            pasajeros = 9, monto = 75000, estado = EstadoServicio.CANCELADO
+            pasajeros = 9, monto = 75000, estado = EstadoServicio.CANCELADO,
+            vehiculo = "Mercedes Sprinter · KXTR-21", motivoCancelacion = "Cancelado por la agencia"
         ))
         asignar(2, Servicio(
             id = 206, excursion = "Traslado Hotel → Aeropuerto", agencia = "Wine Tours Chile",
             numeroReserva = "SB-23870", fecha = fechaPasadaDelMes(8), horaPickup = "05:00",
             puntoPickup = "Hotel Cumbres Vitacura", dropOff = "Aeropuerto AMB",
             pasajeros = 7, monto = 25000, estado = EstadoServicio.FINALIZADO,
-            horaCheckIn = "04:40", horaCheckOut = "05:55"
+            horaCheckIn = "04:40", horaCheckOut = "05:55",
+            tipo = TipoServicio.TRASLADO, vehiculo = "Mercedes Sprinter · KXTR-21"
         ))
     }
 
@@ -283,12 +299,13 @@ object RepositorioLince {
         private set
 
     /** Control de errores FUNCIONAL: devuelve Result en vez de lanzar la excepción. */
-    suspend fun login(email: String, clave: String): Result<Usuario> {
+    suspend fun login(identificador: String, clave: String): Result<Usuario> {
         delay(800) // simula la llamada a la API
         return runCatching {
-            require(email.isNotBlank() && clave.isNotBlank()) { "Completa correo y contraseña" }
+            require(identificador.isNotBlank() && clave.isNotBlank()) { "Completa tu RUT y tu contraseña" }
 
-            val usuario = usuarios.find { it.email.equals(email.trim(), ignoreCase = true) }
+            // find + coincideCon: acepta RUT (con o sin puntos) o correo
+            val usuario = usuarios.find { it.coincideCon(identificador) }
                 ?: throw CredencialesInvalidasException()          // Elvis + throw
 
             if (!usuario.validarClave(clave)) throw CredencialesInvalidasException()
@@ -454,22 +471,45 @@ object RepositorioLince {
     suspend fun obtenerPerfil(): Perfil {
         delay(500)
         val usuario = usuarioActual ?: throw SesionNoIniciadaException()
-
-        val hoy = Formatos.hoy()
-        val delMes = serviciosDelUsuario()
-            .filter { it.fecha.startsWith(Formatos.mesActualIso()) && it.fecha <= hoy }
-        val finalizados = delMes.filter { it.estado == EstadoServicio.FINALIZADO }
-
+        val mes = Formatos.mesActualIso()
         return Perfil(
             usuario = usuario,
             telefono = telefonos[usuario.id],
-            resumen = ResumenMensual(
-                mes = Formatos.nombreMesActual(),
-                realizados = finalizados.size,
-                cancelados = delMes.count { it.estado == EstadoServicio.CANCELADO },
-                montoAcumulado = finalizados.montoTotal()
-            )
+            serviciosDelMes = serviciosDelUsuario().count { it.fecha.startsWith(mes) }
         )
+    }
+
+    // ======================= RESUMEN MENSUAL =======================
+
+    /**
+     * Resumen de un mes (0 = actual, -1 = anterior...).
+     * Regla del equipo: los CANCELADOS igual se pagan al recurso, así que suman al monto.
+     * Puntualidad: % de check-in hechos sin atraso (lo que el cliente quiere premiar).
+     */
+    suspend fun obtenerResumen(desplazamientoMes: Int): Result<ResumenMensual> {
+        delay(500)
+        return runCatching {
+            val mes = Formatos.mesIso(desplazamientoMes)
+            val hoy = Formatos.hoy()
+            val cerrados = serviciosDelUsuario()
+                .filter { it.fecha.startsWith(mes) && it.fecha <= hoy }
+                .filter { it.estado == EstadoServicio.FINALIZADO || it.estado == EstadoServicio.CANCELADO }
+
+            val conCheckIn = cerrados.filter { it.horaCheckIn != null }
+            val puntualidad = if (conCheckIn.isEmpty()) null
+                else conCheckIn.count { !it.conAtraso } * 100 / conCheckIn.size
+
+            ResumenMensual(
+                mes = Formatos.nombreMes(desplazamientoMes),
+                esMesActual = desplazamientoMes == 0,
+                completados = cerrados.count { it.estado == EstadoServicio.FINALIZADO },
+                cancelados = cerrados.count { it.estado == EstadoServicio.CANCELADO },
+                montoTotal = cerrados.montoTotal(),
+                puntualidad = puntualidad,
+                pagoEstimado = Formatos.fechaPagoEstimado(desplazamientoMes),
+                detalle = cerrados.sortedByDescending { it.fecha + it.horaPickup }
+            )
+        }
     }
 
     // ======================= AUXILIARES =======================

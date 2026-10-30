@@ -78,8 +78,38 @@ object Formatos {
     fun mesActualIso(): String = hoy().substring(0, 7)
 
     /** "Septiembre 2026" */
-    fun nombreMesActual(): String =
-        SimpleDateFormat("MMMM yyyy", chile).format(Date()).replaceFirstChar { it.titlecase(chile) }
+    fun nombreMesActual(): String = nombreMes(0)
+
+    /** Calendario posicionado en el día 1 del mes actual + desplazamiento (-1 = mes anterior). */
+    private fun inicioDeMes(desplazamiento: Int): Calendar =
+        Calendar.getInstance().apply {
+            set(Calendar.DAY_OF_MONTH, 1)
+            add(Calendar.MONTH, desplazamiento)
+        }
+
+    /** desplazamiento 0 -> "2026-10", -1 -> "2026-09" */
+    fun mesIso(desplazamiento: Int): String =
+        formatoIso.format(inicioDeMes(desplazamiento).time).substring(0, 7)
+
+    /** desplazamiento 0 -> "Octubre 2026" */
+    fun nombreMes(desplazamiento: Int): String =
+        SimpleDateFormat("MMMM yyyy", chile).format(inicioDeMes(desplazamiento).time)
+            .replaceFirstChar { it.titlecase(chile) }
+
+    /** Fecha estimada de pago: el día 5 del mes siguiente -> "05 de noviembre" */
+    fun fechaPagoEstimado(desplazamiento: Int): String {
+        val pago = inicioDeMes(desplazamiento + 1).apply { set(Calendar.DAY_OF_MONTH, 5) }
+        return SimpleDateFormat("dd 'de' MMMM", chile).format(pago.time)
+    }
+
+    /** "2026-10-24" -> "24 oct" */
+    fun diaMes(fechaIso: String): String =
+        try {
+            val fecha = formatoIso.parse(fechaIso)
+            if (fecha == null) fechaIso else SimpleDateFormat("d MMM", chile).format(fecha).trimEnd('.')
+        } catch (e: ParseException) {
+            fechaIso
+        }
 
     /** "2026-09-28" -> "Lunes 28 de septiembre". Si el texto no es válido, lo devuelve tal cual. */
     fun fechaLegible(fechaIso: String): String =

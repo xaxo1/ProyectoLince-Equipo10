@@ -1,10 +1,13 @@
 package com.equipo10.lince.ui.theme
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 
-/** Esquema de colores Material 3 con la identidad visual SouthTour (tema claro). */
+/** Esquema de colores Material 3 con la identidad SouthTour (sistema "Atacama Fieldwork"). */
 private val EsquemaSouthTour = lightColorScheme(
     primary = CafeSouthTour,
     onPrimary = Blanco,
@@ -12,7 +15,7 @@ private val EsquemaSouthTour = lightColorScheme(
     onPrimaryContainer = TextoPrincipal,
     secondary = TurquesaSouthTour,
     onSecondary = Blanco,
-    secondaryContainer = TurquesaSuave,      // chips seleccionados
+    secondaryContainer = TurquesaSuave,
     onSecondaryContainer = TextoPrincipal,
     tertiary = VerdeConfirmado,
     onTertiary = Blanco,
@@ -22,23 +25,33 @@ private val EsquemaSouthTour = lightColorScheme(
     onSurface = TextoPrincipal,
     surfaceVariant = CafeSuave,
     onSurfaceVariant = TextoSecundario,
-    // Las Card de Material 3 usan estos colores -> tarjetas en blanco
     surfaceContainerLowest = Blanco,
     surfaceContainerLow = Blanco,
     surfaceContainer = Blanco,
     surfaceContainerHigh = Blanco,
     surfaceContainerHighest = Blanco,
-    outline = BordeSuave,
-    outlineVariant = BordeSuave,
+    outline = ArenaSouthTour,
+    outlineVariant = ArenaSouthTour,
     error = AlertaSouthTour,
-    onError = Blanco
+    onError = Blanco,
+    errorContainer = AlertaSuave,
+    onErrorContainer = TextoPrincipal
+)
+
+/** Formas del diseño: tarjetas de 16 dp y hojas de 28 dp. */
+private val FormasSouthTour = Shapes(
+    small = RoundedCornerShape(8.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(24.dp),
+    extraLarge = RoundedCornerShape(28.dp)
 )
 
 @Composable
 fun LinceTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = EsquemaSouthTour,
-        typography = Typography,   // viene del Type.kt que genera Android Studio (no se borra)
+        typography = Typography,
+        shapes = FormasSouthTour,
         content = content
     )
 }

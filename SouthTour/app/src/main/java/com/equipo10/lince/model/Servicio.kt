@@ -1,5 +1,11 @@
 package com.equipo10.lince.model
 
+/** Tipo de servicio: define el ícono y el texto de la tarjeta. */
+enum class TipoServicio(val etiqueta: String) {
+    TRASLADO("Traslado"),
+    TOUR("Tour")
+}
+
 /**
  * DATA CLASS: Kotlin genera toString(), equals(), hashCode() y copy().
  * Contiene lo que muestra el "Detalle del servicio" y el registro de check-in / check-out.
@@ -20,7 +26,10 @@ data class Servicio(
     val estado: EstadoServicio = EstadoServicio.CONFIRMADO,
     val horaCheckIn: String? = null,            // se completa al iniciar el servicio
     val horaCheckOut: String? = null,           // se completa al finalizar el servicio
-    val conAtraso: Boolean = false              // true si el check-in no fue 15 min antes del pickup
+    val conAtraso: Boolean = false,             // true si el check-in no fue 15 min antes del pickup
+    val tipo: TipoServicio = TipoServicio.TOUR,
+    val vehiculo: String? = null,               // vehículo asignado al servicio
+    val motivoCancelacion: String? = null       // solo si está CANCELADO
 ) : Informable {
 
     override fun informar(): String = "$excursion · $horaPickup · $pasajeros pasajeros"

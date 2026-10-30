@@ -70,7 +70,11 @@ class DetalleServicioViewModel : ViewModel() {
         }
     }
 
-    /** Vuelve el servicio al estado en que lo asignó operaciones. */
+    /**
+     * Vuelve el servicio al estado en que lo asignó operaciones (ejemplo de reiniciar() de la Clase 6).
+     * NO se muestra en la interfaz: el requisito de trazabilidad (evidencia Clase 1) dice que un
+     * check-in o check-out no se puede modificar después de registrado.
+     */
     fun reiniciar() {
         val servicio = _uiState.value.servicio ?: return
         _uiState.update { it.copy(procesando = true) }

@@ -16,8 +16,8 @@ class LoginViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    fun onEmailChange(valor: String) {
-        _uiState.update { actual -> actual.copy(email = valor, error = null) }
+    fun onIdentificadorChange(valor: String) {
+        _uiState.update { actual -> actual.copy(identificador = valor, error = null) }
     }
 
     fun onClaveChange(valor: String) {
@@ -32,7 +32,7 @@ class LoginViewModel : ViewModel() {
 
         // CORRUTINA: viewModelScope la cancela sola si el ViewModel se destruye
         viewModelScope.launch {
-            RepositorioLince.login(estado.email, estado.clave)
+            RepositorioLince.login(estado.identificador, estado.clave)
                 .onSuccess {
                     _uiState.update { it.copy(cargando = false, loginExitoso = true) }
                 }
@@ -40,6 +40,11 @@ class LoginViewModel : ViewModel() {
                     _uiState.update { it.copy(cargando = false, error = e.message ?: "Error desconocido") }
                 }
         }
+    }
+
+    /** Cierra el aviso de error ("Reintentar" del diseño). */
+    fun limpiarError() {
+        _uiState.update { it.copy(error = null) }
     }
 
     /** Se llama después de navegar para no repetir la navegación. */
