@@ -26,6 +26,29 @@ object Formatos {
     /** Hora actual en formato "HH:mm" (se usa en el check-in / check-out). */
     fun horaActual(): String = formatoHora.format(Date())
 
+    /** Fecha y hora actual "yyyy-MM-dd HH:mm" (registro de incidencias). */
+    fun fechaHoraActual(): String = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date())
+
+    /** Fecha y hora del teléfono en formato ISO "yyyy-MM-ddTHH:mm:ss" (evidencia secundaria del hito). */
+    fun fechaHoraIso(): String = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).format(Date())
+
+    /** Primer y último día de un mes: desplazamiento 0 -> ("2026-11-01", "2026-11-30"). */
+    fun rangoMes(desplazamiento: Int): Pair<String, String> {
+        val inicio = inicioDeMes(desplazamiento)
+        val fin = inicioDeMes(desplazamiento).apply { set(Calendar.DAY_OF_MONTH, getActualMaximum(Calendar.DAY_OF_MONTH)) }
+        return formatoIso.format(inicio.time) to formatoIso.format(fin.time)
+    }
+
+    /** Minutos entre ahora y una fecha+hora ("2026-11-23", "18:15"); negativo si ya pasó. */
+    fun minutosHasta(fechaIso: String, hora: String): Long {
+        val destino = try { SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).parse("$fechaIso $hora") } catch (e: ParseException) { null }
+            ?: return 0
+        return (destino.time - System.currentTimeMillis()) / 60_000
+    }
+
+    /** "2026-11-23T18:15:30.123" -> "18:15" */
+    fun horaDe(fechaHoraIso: String?): String = fechaHoraIso?.substringAfter('T', "")?.take(5).orEmpty()
+
     /** Fecha a "dias" de hoy (positivo = futuro, negativo = pasado). */
     fun fechaEnDias(dias: Int): String {
         val calendario = Calendar.getInstance()
@@ -78,8 +101,38 @@ object Formatos {
     fun mesActualIso(): String = hoy().substring(0, 7)
 
     /** "Septiembre 2026" */
-    fun nombreMesActual(): String =
-        SimpleDateFormat("MMMM yyyy", chile).format(Date()).replaceFirstChar { it.titlecase(chile) }
+    fun nombreMesActual(): String = nombreMes(0)
+
+    /** Calendario posicionado en el día 1 del mes actual + desplazamiento (-1 = mes anterior). */
+    private fun inicioDeMes(desplazamiento: Int): Calendar =
+        Calendar.getInstance().apply {
+            set(Calendar.DAY_OF_MONTH, 1)
+            add(Calendar.MONTH, desplazamiento)
+        }
+
+    /** desplazamiento 0 -> "2026-10", -1 -> "2026-09" */
+    fun mesIso(desplazamiento: Int): String =
+        formatoIso.format(inicioDeMes(desplazamiento).time).substring(0, 7)
+
+    /** desplazamiento 0 -> "Octubre 2026" */
+    fun nombreMes(desplazamiento: Int): String =
+        SimpleDateFormat("MMMM yyyy", chile).format(inicioDeMes(desplazamiento).time)
+            .replaceFirstChar { it.titlecase(chile) }
+
+    /** Fecha estimada de pago: el día 5 del mes siguiente -> "05 de noviembre" */
+    fun fechaPagoEstimado(desplazamiento: Int): String {
+        val pago = inicioDeMes(desplazamiento + 1).apply { set(Calendar.DAY_OF_MONTH, 5) }
+        return SimpleDateFormat("dd 'de' MMMM", chile).format(pago.time)
+    }
+
+    /** "2026-10-24" -> "24 oct" */
+    fun diaMes(fechaIso: String): String =
+        try {
+            val fecha = formatoIso.parse(fechaIso)
+            if (fecha == null) fechaIso else SimpleDateFormat("d MMM", chile).format(fecha).trimEnd('.')
+        } catch (e: ParseException) {
+            fechaIso
+        }
 
     /** "2026-09-28" -> "Lunes 28 de septiembre". Si el texto no es válido, lo devuelve tal cual. */
     fun fechaLegible(fechaIso: String): String =

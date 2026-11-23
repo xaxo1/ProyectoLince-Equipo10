@@ -1,11 +1,18 @@
 package com.equipo10.lince.model
 
-/** Estado completo del "Detalle del servicio" (incluye check-in / check-out). */
+/** Estado completo del "Detalle del servicio" (check-in / check-out con geocerca). */
 data class DetalleUiState(
     val cargando: Boolean = true,
     val servicio: Servicio? = null,
-    val procesando: Boolean = false,                      // mientras se registra el check-in/out
-    val mensaje: String = "Cargando servicio...",         // mensaje para el usuario (como en la Clase 6)
-    val mensajeEsAlerta: Boolean = false,                 // true -> se pinta en color Alerta
-    val error: String? = null                             // error al cargar
+    val esTransportista: Boolean = false,
+    val geocerca: GeocercaInfo? = null,                   // hotel de pickup: centro + radio
+    val reglas: Reglas = Reglas(),
+    val ultimoRegistro: RegistroHito? = null,             // respuesta del servidor (distancia, radio, precisión)
+    val ubicacionActual: Ubicacion? = null,               // última lectura del GPS
+    val distanciaActual: Double? = null,                  // calculada en el teléfono (Haversine)
+    val procesando: Boolean = false,
+    val mensaje: String = "Cargando servicio...",
+    val mensajeEsAlerta: Boolean = false,
+    val incidencias: List<Incidencia> = emptyList(),
+    val error: String? = null
 )

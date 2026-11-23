@@ -1,3 +1,122 @@
 <resources>
     <string name="app_name">SouthTour</string>
+
+    <!-- Navegación y títulos -->
+    <string name="titulo_login">Iniciar sesión</string>
+    <string name="nav_hoy">Hoy</string>
+    <string name="nav_calendario">Calendario</string>
+    <string name="nav_disponibilidad">Disponibilidad</string>
+    <string name="nav_resumen">Resumen</string>
+    <string name="nav_panel">Panel</string>
+    <string name="nav_southbound">Southbound</string>
+    <string name="titulo_perfil">Mi perfil</string>
+    <string name="titulo_detalle">Detalle del servicio</string>
+    <string name="titulo_reserva">Reserva completa</string>
+    <string name="catalogo_southbound">Catálogo Southbound (API)</string>
+
+    <!-- Detalle y geocerca -->
+    <string name="atraso">Atraso</string>
+    <string name="pendiente_sync">Pendiente de sincronizar</string>
+    <string name="asignacion">Asignación</string>
+    <string name="asignacion_confirmada">Confirmaste esta asignación.</string>
+    <string name="asignacion_rechazada">Rechazaste esta asignación.</string>
+    <string name="asignacion_pendiente">¿Confirmas que realizarás este servicio?</string>
+    <string name="confirmar">Confirmar</string>
+    <string name="rechazar">Rechazar</string>
+    <string name="llegada_geocerca">Llegada al hotel (geocerca)</string>
+    <string name="punto_pickup">Punto de pickup</string>
+    <string name="radio_geocerca">Radio de la geocerca</string>
+    <string name="centro">Centro</string>
+    <string name="sin_geocerca">Este lugar no tiene geocerca: no se puede verificar la llegada.</string>
+    <string name="regla">Regla</string>
+    <string name="regla_texto">≥ %1$d min antes · GPS ±%2$d m máx.</string>
+    <string name="distancia_actual">Estás a %1$d m del hotel (precisión ±%2$d m)</string>
+    <string name="medir_distancia">Medir distancia al hotel</string>
+    <string name="check_in">Check-in</string>
+    <string name="check_out">Check-out</string>
+    <string name="pendiente">Pendiente</string>
+    <string name="hacer_check_in">Registrar llegada (check-in)</string>
+    <string name="hacer_check_out">Registrar término (check-out)</string>
+    <string name="reportar_posicion">Enviar mi posición a coordinación</string>
+    <string name="ir_con_waze">Ir con Waze a %1$s</string>
+    <string name="incidencias_titulo">Incidencias (%1$d)</string>
+    <string name="sin_incidencias">Sin incidencias reportadas.</string>
+    <string name="reportar_incidencia">Reportar incidencia</string>
+    <string name="pickup_dropoff">Pickup y dropoff</string>
+    <string name="hora_pickup">Hora de pickup</string>
+    <string name="dropoff">Dropoff</string>
+    <string name="pasajeros">Pasajeros</string>
+    <string name="oficina">Oficina</string>
+    <string name="vehiculo">Vehículo</string>
+    <string name="transportista">Transportista</string>
+    <string name="guia">Guía</string>
+    <string name="idioma_requerido">Idioma requerido</string>
+    <string name="reserva">Reserva</string>
+    <string name="agencia">Agencia / cliente</string>
+    <string name="n_reserva">N° de reserva</string>
+    <string name="titular">Titular</string>
+    <string name="estado_servicio">Estado del servicio</string>
+    <string name="ver_reserva">Ver reserva completa →</string>
+
+    <!-- Calendario -->
+    <string name="buscar">Buscar excursión, agencia o reserva</string>
+    <string name="mostrando_de">Mostrando %1$d de %2$d servicios</string>
+    <string name="sin_servicios_categoria">No hay servicios en esta categoría.</string>
+    <string name="sin_coincidencias">No hay servicios que coincidan con \"%1$s\".</string>
+
+    <!-- Resumen -->
+    <string name="mes_actual">Volver al mes actual</string>
+    <string name="mis_servicios">Mis servicios</string>
+    <string name="completados">Completados</string>
+    <string name="cancelados">Cancelados</string>
+    <string name="puntualidad">Puntualidad</string>
+    <string name="total_southbound">Servicios Southbound</string>
+    <string name="por_tipo">Mis servicios por tipo</string>
+    <string name="southbound_por_estado">Southbound por estado (Lince API)</string>
+
+    <!-- Perfil -->
+    <string name="datos_recurso">Datos del usuario</string>
+    <string name="correo">Correo</string>
+    <string name="empresa">Empresa</string>
+    <string name="id_lince">Id en Lince API</string>
+    <string name="servicios_mes">Servicios este mes</string>
+    <string name="hitos_registrados">Hitos registrados</string>
+    <string name="pendientes_sync">Pendientes de sincronizar</string>
+    <string name="version">Versión de la app</string>
+    <string name="idioma">Idioma</string>
+    <string name="cerrar_sesion">Cerrar sesión</string>
+
+    <!-- Coordinación -->
+    <string name="hitos_hoy">Hitos de hoy</string>
+    <string name="actualizar">Actualizar</string>
+    <string name="sin_hitos">Aún no hay check-in registrados hoy.</string>
+    <string name="ultimas_posiciones">Última posición de cada transportista</string>
+    <string name="geocercas">Geocercas (radio)</string>
+
+    <!-- Catálogo Southbound -->
+    <string name="pagina_de">Página %1$d de %2$d · %3$d resultados</string>
+    <string name="tipos_servicio">Tipos de servicio</string>
+    <string name="cargar_mas">Cargar más</string>
+
+    <!-- Login y Hoy -->
+    <string name="login_red">RED OPERATIVA ACTIVA · CHILE</string>
+    <string name="login_subtitulo">Plataforma interna de operaciones — Guías y Transportistas</string>
+    <string name="login_usuario">Usuario / Identificador</string>
+    <string name="login_rut_correo">RUT o correo</string>
+    <string name="login_ayuda">Para transportistas de flota o guías de expedición</string>
+    <string name="login_clave">Contraseña</string>
+    <string name="login_ingresar">Ingresar</string>
+    <string name="login_problemas">¿Problemas de acceso?</string>
+    <string name="login_contactar">Contactar a Coordinación</string>
+    <string name="login_fallo">FALLO DE AUTENTICACIÓN</string>
+    <string name="reintentar">Reintentar</string>
+    <string name="login_usuarios_prueba">Usuarios de prueba (clave 1234)</string>
+    <string name="hoy_sin_servicios">No tienes servicios asignados para hoy.</string>
+    <string name="hoy_hora_recogida">HORA DE RECOGIDA</string>
+    <string name="hoy_fin_jornada">Fin de la jornada de hoy</string>
+    <string name="hoy_sin_pendientes">No hay más servicios pendientes para hoy.</string>
+    <string name="hoy_hola">Hola, %1$s</string>
+    <string name="hoy_iniciar">Iniciar check-in</string>
+    <string name="hoy_continuar">Continuar servicio</string>
+    <string name="hoy_ver_registro">Ver registro</string>
 </resources>

@@ -17,6 +17,10 @@ class ReservaNoEncontradaException(numero: String) :
 class AccionNoPermitidaException(mensaje: String) :
     Exception(mensaje)
 
+/** El GPS no está disponible: sin permiso, desactivado o sin señal. */
+class UbicacionNoDisponibleException(mensaje: String) :
+    Exception(mensaje)
+
 /** Bloqueos de disponibilidad que no cumplen la regla de una semana de anticipación. */
 class BloqueoNoPermitidoException(mensaje: String) :
     Exception(mensaje)

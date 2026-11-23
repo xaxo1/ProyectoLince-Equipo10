@@ -11,5 +11,6 @@ data class DiaDisponibilidad(
     val fecha: String,                  // "yyyy-MM-dd"
     val diasDeAnticipacion: Int,        // 0 = hoy, 1 = mañana...
     val estado: EstadoDia,
-    val servicio: String? = null        // excursión del día, si tiene servicio
+    val servicio: String? = null,       // descripción del servicio del día, si tiene
+    val bloqueoId: Long? = null         // id del bloqueo en el backend (para desbloquear)
 )
