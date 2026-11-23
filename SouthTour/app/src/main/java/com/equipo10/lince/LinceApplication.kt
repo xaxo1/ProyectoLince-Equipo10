@@ -1,17 +1,19 @@
 package com.equipo10.lince
 
 import android.app.Application
-import com.equipo10.lince.data.RepositorioLince
+import com.equipo10.lince.data.ServiceLocator
 import com.equipo10.lince.data.UbicacionDispositivo
+import com.equipo10.lince.sync.SincronizarHitosWorker
 
 /**
- * Se crea ANTES que cualquier pantalla: entrega el Context a la base de datos Room
- * y al GPS (se registra en el AndroidManifest con android:name).
+ * Se crea ANTES que cualquier pantalla: arma el repositorio (Retrofit + Room + DataStore),
+ * prepara el GPS y, si quedaron hitos sin enviar, programa su sincronización.
  */
 class LinceApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        RepositorioLince.inicializar(this)
+        ServiceLocator.inicializar(this)
         UbicacionDispositivo.inicializar(this)
+        SincronizarHitosWorker.programar(this)
     }
 }

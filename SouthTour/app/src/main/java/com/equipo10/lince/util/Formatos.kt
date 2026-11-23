@@ -29,6 +29,26 @@ object Formatos {
     /** Fecha y hora actual "yyyy-MM-dd HH:mm" (registro de incidencias). */
     fun fechaHoraActual(): String = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date())
 
+    /** Fecha y hora del teléfono en formato ISO "yyyy-MM-ddTHH:mm:ss" (evidencia secundaria del hito). */
+    fun fechaHoraIso(): String = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).format(Date())
+
+    /** Primer y último día de un mes: desplazamiento 0 -> ("2026-11-01", "2026-11-30"). */
+    fun rangoMes(desplazamiento: Int): Pair<String, String> {
+        val inicio = inicioDeMes(desplazamiento)
+        val fin = inicioDeMes(desplazamiento).apply { set(Calendar.DAY_OF_MONTH, getActualMaximum(Calendar.DAY_OF_MONTH)) }
+        return formatoIso.format(inicio.time) to formatoIso.format(fin.time)
+    }
+
+    /** Minutos entre ahora y una fecha+hora ("2026-11-23", "18:15"); negativo si ya pasó. */
+    fun minutosHasta(fechaIso: String, hora: String): Long {
+        val destino = try { SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).parse("$fechaIso $hora") } catch (e: ParseException) { null }
+            ?: return 0
+        return (destino.time - System.currentTimeMillis()) / 60_000
+    }
+
+    /** "2026-11-23T18:15:30.123" -> "18:15" */
+    fun horaDe(fechaHoraIso: String?): String = fechaHoraIso?.substringAfter('T', "")?.take(5).orEmpty()
+
     /** Fecha a "dias" de hoy (positivo = futuro, negativo = pasado). */
     fun fechaEnDias(dias: Int): String {
         val calendario = Calendar.getInstance()

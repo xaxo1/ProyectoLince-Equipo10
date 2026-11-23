@@ -8,5 +8,6 @@ data class LoginUiState(
     val errorClave: String? = null,          // error de validación bajo el campo contraseña
     val cargando: Boolean = false,
     val error: String? = null,
-    val loginExitoso: Boolean = false
+    val loginExitoso: Boolean = false,
+    val rol: Rol? = null                     // decide si se navega a "Hoy" o al panel de coordinación
 )

@@ -4,23 +4,22 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.sqlite.db.SupportSQLiteDatabase
-import com.equipo10.lince.util.Formatos
 
 /**
- * DATABASE de Room: el archivo SQLite "southtour.db" con sus 3 tablas.
- * Se crea UNA sola instancia para toda la app (patrón Singleton).
+ * DATABASE de Room ("southtour.db"). Desde la versión 2 los datos oficiales viven en el backend;
+ * aquí queda lo necesario para trabajar SIN conexión: caché de servicios, cola de hitos pendientes
+ * y las fotos de las incidencias.
  */
 @Database(
-    entities = [RegistroServicioEntity::class, BloqueoEntity::class, IncidenciaEntity::class],
-    version = 1,
+    entities = [HitoPendienteEntity::class, ServicioCacheEntity::class, FotoIncidenciaEntity::class],
+    version = 2,
     exportSchema = false
 )
 abstract class LinceDatabase : RoomDatabase() {
 
-    abstract fun registroServicioDao(): RegistroServicioDao
-    abstract fun bloqueoDao(): BloqueoDao
-    abstract fun incidenciaDao(): IncidenciaDao
+    abstract fun hitoPendienteDao(): HitoPendienteDao
+    abstract fun servicioCacheDao(): ServicioCacheDao
+    abstract fun fotoIncidenciaDao(): FotoIncidenciaDao
 
     companion object {
         @Volatile
@@ -28,25 +27,11 @@ abstract class LinceDatabase : RoomDatabase() {
 
         fun obtener(context: Context): LinceDatabase =
             instancia ?: synchronized(this) {
-                instancia ?: Room.databaseBuilder(
-                    context.applicationContext,
-                    LinceDatabase::class.java,
-                    "southtour.db"
-                )
-                    .addCallback(DatosIniciales)
+                instancia ?: Room.databaseBuilder(context.applicationContext, LinceDatabase::class.java, "southtour.db")
+                    // La versión 1 tenía otras tablas: se recrea la base (solo había datos de prueba)
+                    .fallbackToDestructiveMigration(dropAllTables = true)
                     .build()
                     .also { instancia = it }
             }
-    }
-
-    /** Se ejecuta SOLO la primera vez que se crea la base: deja un día bloqueado de ejemplo para la guía. */
-    private object DatosIniciales : Callback() {
-        override fun onCreate(db: SupportSQLiteDatabase) {
-            super.onCreate(db)
-            db.execSQL(
-                "INSERT INTO bloqueos (usuarioId, fecha) VALUES (?, ?)",
-                arrayOf<Any>(1, Formatos.fechaEnDias(14))
-            )
-        }
     }
 }

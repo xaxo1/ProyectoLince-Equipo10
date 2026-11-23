@@ -8,9 +8,11 @@ data class InicioUiState(
     val fechaHoy: String = "",
     val serviciosHoy: List<Servicio> = emptyList(),
     val proximo: Servicio? = null,
+    val desdeCache: Boolean = false,          // true: sin internet, datos guardados en Room
+    val pendientesSincronizar: Int = 0,       // hitos en la cola offline
     val error: String? = null
 ) {
-    /** Propiedades calculadas (colecciones: sumOf, count, none). */
+    /** Propiedades calculadas (colecciones: sumOf, none). */
     val totalPasajeros: Int
         get() = serviciosHoy.filter { it.estado != EstadoServicio.CANCELADO }.sumOf { it.pasajeros }
 

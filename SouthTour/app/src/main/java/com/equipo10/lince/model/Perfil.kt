@@ -1,24 +1,27 @@
 package com.equipo10.lince.model
 
 /**
- * Resumen mensual (pantalla "Resumen").
- * Regla del equipo (evidencia Clase 2): los servicios CANCELADOS igual se pagan al recurso.
+ * Resumen del mes (pantalla "Resumen"): mis servicios según la Lince API + mis hitos del backend,
+ * más el resumen global de Southbound (endpoint /api/v1/resumen).
  */
 data class ResumenMensual(
-    val mes: String,                    // "Octubre 2026"
+    val mes: String,                    // "Noviembre 2026"
     val esMesActual: Boolean,
-    val completados: Int,
-    val cancelados: Int,
-    val montoTotal: Int,                // completados + cancelados (pagados al 100 %)
-    val puntualidad: Int?,              // % de check-in sin atraso; null si no hubo check-in
-    val pagoEstimado: String,           // "05 de noviembre"
-    val detalle: List<Servicio>         // servicios cerrados del mes, del más reciente al más antiguo
+    val misServicios: Int,
+    val completados: Int,               // servicios con check-out
+    val cancelados: Int,                // XX o asignación CX/DL
+    val puntualidad: Int?,              // % de check-in verificados; null si no hubo check-in
+    val porTipo: Map<TipoServicio, Int>,
+    val totalSouthbound: Int,           // servicios de toda la empresa en el mes
+    val porEstadoSouthbound: Map<String, Int>,
+    val detalle: List<Servicio>
 )
 
 /** Datos que se muestran en la pantalla de Perfil. */
 data class Perfil(
     val usuario: Usuario,
-    val telefono: String?,                 // puede ser null -> se muestra "No registrado"
-    val empresa: String = "Southbound",    // parámetro con valor por defecto
-    val serviciosDelMes: Int
+    val empresa: String = "Southbound",
+    val serviciosDelMes: Int,
+    val hitosRegistrados: Int,
+    val pendientesSincronizar: Int
 )

@@ -62,6 +62,7 @@ object UbicacionDispositivo {
         val ubicacion = lectura ?: gestor.getLastKnownLocation(proveedor)
             ?: throw UbicacionNoDisponibleException("no se pudo obtener la señal GPS")
 
-        Ubicacion(ubicacion.latitude, ubicacion.longitude)
+        // accuracy = radio de error en metros (precisión del GPS)
+        Ubicacion(ubicacion.latitude, ubicacion.longitude, ubicacion.accuracy.toDouble())
     }
 }
