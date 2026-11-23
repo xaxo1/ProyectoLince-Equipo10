@@ -1,0 +1,7 @@
+.gradle/
+build/
+data/
+config/secretos.properties
+*.jks
+.idea/
+*.iml
