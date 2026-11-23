@@ -3,6 +3,7 @@ package com.equipo10.lince.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.equipo10.lince.data.RepositorioLince
+import com.equipo10.lince.data.ServiceLocator
 import com.equipo10.lince.model.LoginUiState
 import com.equipo10.lince.model.Usuario
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,18 +12,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(
+    private val repositorio: RepositorioLince = ServiceLocator.repositorio
+) : ViewModel() {
 
-    // ENCAPSULAMIENTO (Clase 6): el MutableStateFlow es privado; la pantalla solo LEE el StateFlow
+    // ENCAPSULAMIENTO: el MutableStateFlow es privado; la pantalla solo LEE el StateFlow
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
     fun onIdentificadorChange(valor: String) {
-        _uiState.update { actual -> actual.copy(identificador = valor, errorIdentificador = null, error = null) }
+        _uiState.update { it.copy(identificador = valor, errorIdentificador = null, error = null) }
     }
 
     fun onClaveChange(valor: String) {
-        _uiState.update { actual -> actual.copy(clave = valor, errorClave = null, error = null) }
+        _uiState.update { it.copy(clave = valor, errorClave = null, error = null) }
     }
 
     fun iniciarSesion() {
@@ -37,17 +40,12 @@ class LoginViewModel : ViewModel() {
             return
         }
 
+        // 2) Login contra el backend propio (devuelve JWT + rol)
         _uiState.update { it.copy(cargando = true, error = null) }
-
-        // CORRUTINA: viewModelScope la cancela sola si el ViewModel se destruye
         viewModelScope.launch {
-            RepositorioLince.login(estado.identificador, estado.clave)
-                .onSuccess {
-                    _uiState.update { it.copy(cargando = false, loginExitoso = true) }
-                }
-                .onFailure { e ->
-                    _uiState.update { it.copy(cargando = false, error = e.message ?: "Error desconocido") }
-                }
+            repositorio.login(estado.identificador, estado.clave)
+                .onSuccess { usuario -> _uiState.update { it.copy(cargando = false, loginExitoso = true, rol = usuario.rol) } }
+                .onFailure { e -> _uiState.update { it.copy(cargando = false, error = e.message ?: "Error desconocido") } }
         }
     }
 
@@ -56,8 +54,7 @@ class LoginViewModel : ViewModel() {
         val texto = valor.trim()
         return when {
             texto.isEmpty() -> "Ingresa tu RUT o tu correo"
-            "@" in texto ->
-                if (REGEX_CORREO.matches(texto)) null else "El correo no tiene un formato válido"
+            "@" in texto -> if (REGEX_CORREO.matches(texto)) null else "El correo no tiene un formato válido"
             !REGEX_RUT.matches(Usuario.normalizarRut(texto)) -> "El RUT debe tener el formato 12.345.678-9"
             else -> null
         }

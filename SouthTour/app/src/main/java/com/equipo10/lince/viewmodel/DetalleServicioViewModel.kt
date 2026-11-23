@@ -3,12 +3,15 @@ package com.equipo10.lince.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.equipo10.lince.data.RepositorioLince
+import com.equipo10.lince.data.ServiceLocator
 import com.equipo10.lince.data.UbicacionDispositivo
 import com.equipo10.lince.model.DetalleUiState
 import com.equipo10.lince.model.EstadoServicio
-import com.equipo10.lince.model.Servicio
+import com.equipo10.lince.model.Rol
+import com.equipo10.lince.model.TipoHito
+import com.equipo10.lince.model.Ubicacion
 import com.equipo10.lince.util.Formatos
-import kotlinx.coroutines.Job
+import com.equipo10.lince.util.Geocerca
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,123 +20,134 @@ import kotlinx.coroutines.launch
 
 /**
  * ViewModel del "Detalle del servicio".
- * Aplica la Clase 6: avanzarEstado() y reiniciar() actualizan el StateFlow con update { copy() }.
+ * Check-in: lee el GPS -> el teléfono calcula la distancia al hotel (Haversine) -> se envía al backend,
+ * que vuelve a validar y responde VERIFICADA, FUERA_DE_ZONA, ATRASADA o GPS_IMPRECISO.
  */
-class DetalleServicioViewModel : ViewModel() {
+class DetalleServicioViewModel(
+    private val repositorio: RepositorioLince = ServiceLocator.repositorio,
+    private val leerUbicacion: suspend () -> Result<Ubicacion> = { UbicacionDispositivo.obtenerUbicacion() }
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DetalleUiState())
     val uiState: StateFlow<DetalleUiState> = _uiState.asStateFlow()
 
-    private var observadorIncidencias: Job? = null
+    private var servicioId: Int = -1
 
     fun cargar(idServicio: Int) {
-        observarIncidencias(idServicio)
+        servicioId = idServicio
         viewModelScope.launch {
             _uiState.update { it.copy(cargando = true, error = null) }
-            RepositorioLince.obtenerServicio(idServicio)
+            val reglas = repositorio.reglas()
+            repositorio.servicio(idServicio)
                 .onSuccess { servicio ->
+                    val geocerca = repositorio.geocercaDe(servicio.puntoPickup).getOrNull()
+                    val registros = repositorio.registrosDelServicio(idServicio).getOrDefault(emptyList())
+                    val incidencias = repositorio.incidencias(idServicio).getOrDefault(emptyList())
                     _uiState.update {
                         it.copy(
                             cargando = false,
                             servicio = servicio,
-                            mensaje = mensajeSegunEstado(servicio),
-                            mensajeEsAlerta = servicio.conAtraso || servicio.estado == EstadoServicio.CANCELADO
+                            esTransportista = repositorio.usuarioActual?.rol == Rol.TRANSPORTISTA,
+                            geocerca = geocerca,
+                            reglas = reglas,
+                            ultimoRegistro = registros.lastOrNull { r -> r.tipo != TipoHito.POSICION },
+                            incidencias = incidencias,
+                            mensaje = mensajeSegunEstado(servicio.estado, servicio.fecha, servicio.horaPickup, reglas.minutosAntes),
+                            mensajeEsAlerta = servicio.estado == EstadoServicio.CANCELADO || servicio.conAtraso
                         )
                     }
                 }
-                .onFailure { e ->
-                    _uiState.update { it.copy(cargando = false, error = e.message ?: "No se pudo cargar el servicio") }
-                }
+                .onFailure { e -> _uiState.update { it.copy(cargando = false, error = e.message ?: "No se pudo cargar el servicio") } }
         }
     }
 
-    /** Room entrega un Flow: cada incidencia nueva aparece sola en el Detalle. */
-    private fun observarIncidencias(idServicio: Int) {
-        observadorIncidencias?.cancel()
-        observadorIncidencias = viewModelScope.launch {
-            RepositorioLince.observarIncidencias(idServicio).collect { lista ->
-                _uiState.update { it.copy(incidencias = lista) }
-            }
-        }
-    }
-
-    /**
-     * CONFIRMADO -> EN_CURSO (check-in) -> FINALIZADO (check-out).
-     * Antes de registrar se lee el GPS. Si no hay ubicación (permiso denegado o sin señal),
-     * el registro igual se hace con la hora y se avisa al usuario.
-     */
+    /** CONFIRMADO -> check-in -> EN_CURSO -> check-out -> FINALIZADO. */
     fun avanzarEstado() {
         val actual = _uiState.value
         val servicio = actual.servicio ?: return
         if (actual.procesando) return
-
+        val tipo = when (servicio.estado) {
+            EstadoServicio.CONFIRMADO -> TipoHito.CHECK_IN
+            EstadoServicio.EN_CURSO -> TipoHito.CHECK_OUT
+            else -> return
+        }
         _uiState.update { it.copy(procesando = true, mensaje = "Obteniendo ubicación GPS...", mensajeEsAlerta = false) }
         viewModelScope.launch {
-            val ubicacion = UbicacionDispositivo.obtenerUbicacion()
-            val sinUbicacion = ubicacion.exceptionOrNull()?.let { " Registrado sin ubicación: ${it.message}." }
+            val ubicacion = leerUbicacion().getOrElse { e ->
+                _uiState.update { it.copy(procesando = false, mensaje = "Sin ubicación: ${e.message}", mensajeEsAlerta = true) }
+                return@launch
+            }
+            // El teléfono calcula la distancia al hotel para mostrarla (el servidor la vuelve a calcular)
+            val distancia = actual.geocerca?.let {
+                Geocerca.distanciaMetros(ubicacion.latitud, ubicacion.longitud, it.latitud, it.longitud)
+            }
+            _uiState.update { it.copy(ubicacionActual = ubicacion, distanciaActual = distancia) }
 
-            RepositorioLince.avanzarEstado(servicio.id, ubicacion.getOrNull())
-                .onSuccess { actualizado ->
+            repositorio.registrarHito(servicio.id, tipo, ubicacion)
+                .onSuccess { registro ->
                     _uiState.update {
-                        it.copy(
-                            procesando = false,
-                            servicio = actualizado,
-                            mensaje = mensajeTrasAvanzar(actualizado) + sinUbicacion.orEmpty(),
-                            mensajeEsAlerta = (actualizado.estado == EstadoServicio.EN_CURSO && actualizado.conAtraso) ||
-                                sinUbicacion != null
-                        )
+                        it.copy(procesando = false, ultimoRegistro = registro, mensaje = registro.mensaje, mensajeEsAlerta = !registro.verificado)
                     }
+                    cargar(servicio.id)
                 }
                 .onFailure { e ->
-                    // La regla de negocio no lo permitió: se muestra el motivo en color Alerta
-                    _uiState.update {
-                        it.copy(procesando = false, mensaje = e.message ?: "No se pudo actualizar", mensajeEsAlerta = true)
-                    }
+                    _uiState.update { it.copy(procesando = false, mensaje = e.message ?: "No se pudo registrar", mensajeEsAlerta = true) }
                 }
         }
     }
 
-    /**
-     * Vuelve el servicio al estado en que lo asignó operaciones (ejemplo de reiniciar() de la Clase 6).
-     * NO se muestra en la interfaz: el requisito de trazabilidad (evidencia Clase 1) dice que un
-     * check-in o check-out no se puede modificar después de registrado.
-     */
-    fun reiniciar() {
-        val servicio = _uiState.value.servicio ?: return
-        _uiState.update { it.copy(procesando = true) }
+    /** Lee el GPS solo para mostrar distancia y precisión, sin registrar nada. */
+    fun medirDistancia() {
+        val geocerca = _uiState.value.geocerca ?: return
         viewModelScope.launch {
-            RepositorioLince.reiniciarServicio(servicio.id)
-                .onSuccess { original ->
+            leerUbicacion()
+                .onSuccess { u ->
+                    val d = Geocerca.distanciaMetros(u.latitud, u.longitud, geocerca.latitud, geocerca.longitud)
+                    _uiState.update { it.copy(ubicacionActual = u, distanciaActual = d) }
+                }
+                .onFailure { e -> _uiState.update { it.copy(mensaje = "Sin ubicación: ${e.message}", mensajeEsAlerta = true) } }
+        }
+    }
+
+    /** Transportista en servicio activo: reporte PUNTUAL de posición para coordinación (no rastreo 24/7). */
+    fun reportarPosicion() {
+        val servicio = _uiState.value.servicio ?: return
+        viewModelScope.launch {
+            val ubicacion = leerUbicacion().getOrElse { e ->
+                _uiState.update { it.copy(mensaje = "Sin ubicación: ${e.message}", mensajeEsAlerta = true) }
+                return@launch
+            }
+            repositorio.registrarHito(servicio.id, TipoHito.POSICION, ubicacion)
+                .onSuccess { _uiState.update { it.copy(mensaje = "Posición enviada a coordinación", mensajeEsAlerta = false) } }
+                .onFailure { e -> _uiState.update { it.copy(mensaje = e.message ?: "No se pudo enviar", mensajeEsAlerta = true) } }
+        }
+    }
+
+    /** Confirmar o rechazar la asignación (queda en el backend propio). */
+    fun responderAsignacion(confirmar: Boolean) {
+        val servicio = _uiState.value.servicio ?: return
+        viewModelScope.launch {
+            repositorio.responderAsignacion(servicio.id, confirmar, null)
+                .onSuccess { estado ->
                     _uiState.update {
                         it.copy(
-                            procesando = false,
-                            servicio = original,
-                            mensaje = "Servicio reiniciado: ${original.estado.etiqueta}",
-                            mensajeEsAlerta = false
+                            servicio = servicio.copy(confirmacion = estado),
+                            mensaje = if (confirmar) "Asignación confirmada" else "Asignación rechazada",
+                            mensajeEsAlerta = !confirmar
                         )
                     }
                 }
-                .onFailure { e ->
-                    _uiState.update { it.copy(procesando = false, mensaje = e.message ?: "No se pudo reiniciar", mensajeEsAlerta = true) }
-                }
+                .onFailure { e -> _uiState.update { it.copy(mensaje = e.message ?: "No se pudo responder", mensajeEsAlerta = true) } }
         }
     }
 
     // WHEN como expresión: un mensaje distinto para cada estado
-    private fun mensajeSegunEstado(servicio: Servicio): String = when (servicio.estado) {
+    private fun mensajeSegunEstado(estado: EstadoServicio, fecha: String, hora: String, minutosAntes: Int): String = when (estado) {
         EstadoServicio.CONFIRMADO ->
-            if (servicio.fecha == Formatos.hoy()) "Servicio listo para iniciar. Recuerda llegar 15 min antes del pickup."
-            else "Podrás iniciar este servicio el día ${Formatos.fechaLegible(servicio.fecha)}."
-        EstadoServicio.EN_CURSO -> "Servicio en curso desde las ${servicio.horaCheckIn ?: "--:--"}."
+            if (fecha == Formatos.hoy()) "Llega al hotel al menos $minutosAntes min antes del pickup de las $hora y haz check-in dentro de la geocerca."
+            else "Podrás hacer check-in el día del servicio (${Formatos.fechaLegible(fecha)})."
+        EstadoServicio.EN_CURSO -> "Servicio en curso. Al terminar en el dropoff, registra el check-out."
         EstadoServicio.FINALIZADO -> "Servicio finalizado."
-        EstadoServicio.CANCELADO -> "Este servicio fue cancelado por operaciones."
-    }
-
-    private fun mensajeTrasAvanzar(servicio: Servicio): String = when (servicio.estado) {
-        EstadoServicio.EN_CURSO ->
-            if (servicio.conAtraso) "Check-in a las ${servicio.horaCheckIn} con ATRASO: se notificará a operaciones."
-            else "Check-in a las ${servicio.horaCheckIn}, dentro del horario. Estado: En curso."
-        EstadoServicio.FINALIZADO -> "Check-out a las ${servicio.horaCheckOut}. Servicio finalizado."
-        else -> "Estado actualizado a ${servicio.estado.etiqueta}"
+        EstadoServicio.CANCELADO -> "Este servicio está cancelado (estado Lince XX o asignación CX/DL)."
     }
 }

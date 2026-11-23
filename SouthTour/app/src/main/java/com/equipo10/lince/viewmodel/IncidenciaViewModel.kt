@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.equipo10.lince.data.RepositorioLince
+import com.equipo10.lince.data.ServiceLocator
 import com.equipo10.lince.model.IncidenciaUiState
 import com.equipo10.lince.model.TipoIncidencia
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +17,9 @@ import kotlinx.coroutines.launch
  * ViewModel del formulario "Reportar incidencia".
  * Las reglas de validación viven aquí (no en la pantalla): la UI solo muestra los errores del UiState.
  */
-class IncidenciaViewModel : ViewModel() {
+class IncidenciaViewModel(
+    private val repositorio: RepositorioLince = ServiceLocator.repositorio
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(IncidenciaUiState())
     val uiState: StateFlow<IncidenciaUiState> = _uiState.asStateFlow()
@@ -24,7 +27,7 @@ class IncidenciaViewModel : ViewModel() {
     fun cargar(idServicio: Int) {
         viewModelScope.launch {
             _uiState.update { it.copy(cargando = true, error = null) }
-            RepositorioLince.obtenerServicio(idServicio)
+            repositorio.servicio(idServicio)
                 .onSuccess { servicio -> _uiState.update { it.copy(cargando = false, servicio = servicio) } }
                 .onFailure { e -> _uiState.update { it.copy(cargando = false, error = e.message ?: "No se pudo cargar el servicio") } }
         }
@@ -80,11 +83,11 @@ class IncidenciaViewModel : ViewModel() {
             return
         }
 
-        // 2) Todo válido: guardar en Room
+        // 2) Todo válido: guardar en el backend (la foto queda en el teléfono)
         val tipo = estado.tipo ?: return
         _uiState.update { it.copy(guardando = true, aviso = null) }
         viewModelScope.launch {
-            RepositorioLince.registrarIncidencia(
+            repositorio.registrarIncidencia(
                 servicioId = servicio.id,
                 tipo = tipo,
                 descripcion = estado.descripcion,

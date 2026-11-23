@@ -3,6 +3,7 @@ package com.equipo10.lince.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.equipo10.lince.data.RepositorioLince
+import com.equipo10.lince.data.ServiceLocator
 import com.equipo10.lince.model.ResumenUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,8 +11,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** ViewModel del "Resumen" mensual: total acumulado, completados, cancelados pagados y puntualidad. */
-class ResumenViewModel : ViewModel() {
+/** ViewModel del "Resumen" mensual: mis servicios, puntualidad y el resumen de Southbound (Lince API). */
+class ResumenViewModel(
+    private val repositorio: RepositorioLince = ServiceLocator.repositorio
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ResumenUiState())
     val uiState: StateFlow<ResumenUiState> = _uiState.asStateFlow()
@@ -31,7 +34,7 @@ class ResumenViewModel : ViewModel() {
     private fun cargarMes(desplazamiento: Int) {
         viewModelScope.launch {
             _uiState.update { it.copy(cargando = true, error = null, desplazamientoMes = desplazamiento) }
-            RepositorioLince.obtenerResumen(desplazamiento)
+            repositorio.resumen(desplazamiento)
                 .onSuccess { resumen -> _uiState.update { it.copy(cargando = false, resumen = resumen) } }
                 .onFailure { e -> _uiState.update { it.copy(cargando = false, error = e.message ?: "No se pudo cargar el resumen") } }
         }
