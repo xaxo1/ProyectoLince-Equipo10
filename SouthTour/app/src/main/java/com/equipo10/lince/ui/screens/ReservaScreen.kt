@@ -28,18 +28,18 @@ import com.equipo10.lince.viewmodel.ReservaViewModel
 /** "Reserva completa": itinerario de los pasajeros por número de reserva. */
 @Composable
 fun ReservaScreen(
-    numeroReserva: String,
+    servicioId: Int,
     viewModel: ReservaViewModel = viewModel()
 ) {
     val estado by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(numeroReserva) { viewModel.cargar(numeroReserva) }
+    LaunchedEffect(servicioId) { viewModel.cargar(servicioId) }
 
     val error = estado.error
     val reserva = estado.reserva
     when {
         estado.cargando -> CargandoContenido()
-        error != null -> ErrorContenido(error, onReintentar = { viewModel.cargar(numeroReserva) })
+        error != null -> ErrorContenido(error, onReintentar = { viewModel.cargar(servicioId) })
         reserva != null -> ContenidoReserva(reserva)
     }
 }

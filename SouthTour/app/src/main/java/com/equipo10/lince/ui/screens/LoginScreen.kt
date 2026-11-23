@@ -50,6 +50,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -63,6 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.equipo10.lince.R
+import com.equipo10.lince.model.Rol
 import com.equipo10.lince.ui.navigation.NOMBRE_APP
 import com.equipo10.lince.ui.theme.ArenaSouthTour
 import com.equipo10.lince.viewmodel.LoginViewModel
@@ -73,7 +76,7 @@ private const val TELEFONO_COORDINACION = "+56229876543"
 /** Pantalla "Iniciar sesión" (diseño de Google Stitch). */
 @Composable
 fun LoginScreen(
-    onLoginExitoso: () -> Unit,
+    onLoginExitoso: (Rol) -> Unit,
     viewModel: LoginViewModel = viewModel()
 ) {
     val estado by viewModel.uiState.collectAsStateWithLifecycle()
@@ -84,7 +87,7 @@ fun LoginScreen(
     LaunchedEffect(estado.loginExitoso) {
         if (estado.loginExitoso) {
             viewModel.navegacionRealizada()
-            onLoginExitoso()
+            onLoginExitoso(estado.rol ?: Rol.GUIA)
         }
     }
 
@@ -109,7 +112,7 @@ fun LoginScreen(
             Row(Modifier.padding(horizontal = 14.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.secondary, CircleShape))
                 Spacer(Modifier.width(8.dp))
-                Text("RED OPERATIVA ACTIVA · CHILE", style = MaterialTheme.typography.labelMedium,
+                Text(stringResource(R.string.login_red), style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold)
             }
         }
@@ -127,7 +130,7 @@ fun LoginScreen(
         Spacer(Modifier.height(12.dp))
         Text(NOMBRE_APP, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
         Text(
-            "Plataforma interna de operaciones — Guías y Transportistas",
+            stringResource(R.string.login_subtitulo),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
@@ -143,9 +146,9 @@ fun LoginScreen(
         ) {
             Column(Modifier.padding(20.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Usuario / Identificador", style = MaterialTheme.typography.titleSmall,
+                    Text(stringResource(R.string.login_usuario), style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                    Text("RUT o correo", style = MaterialTheme.typography.labelMedium,
+                    Text(stringResource(R.string.login_rut_correo), style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.secondary)
                 }
                 Spacer(Modifier.height(6.dp))
@@ -159,11 +162,11 @@ fun LoginScreen(
                     colors = coloresCampo,
                     isError = estado.errorIdentificador != null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().testTag("campoIdentificador")
                 )
                 // Error de validación del campo (o el texto de ayuda si no hay error)
                 Text(
-                    estado.errorIdentificador ?: "Para transportistas de flota o guías de expedición",
+                    estado.errorIdentificador ?: stringResource(R.string.login_ayuda),
                     style = MaterialTheme.typography.bodySmall,
                     color = if (estado.errorIdentificador != null) MaterialTheme.colorScheme.error
                         else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -171,7 +174,7 @@ fun LoginScreen(
                 )
 
                 Spacer(Modifier.height(16.dp))
-                Text("Contraseña", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.login_clave), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(6.dp))
                 OutlinedTextField(
                     value = estado.clave,
@@ -191,7 +194,7 @@ fun LoginScreen(
                     visualTransformation = if (claveVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     isError = estado.errorClave != null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().testTag("campoClave")
                 )
                 estado.errorClave?.let { mensaje ->
                     Text(
@@ -207,13 +210,13 @@ fun LoginScreen(
                     onClick = viewModel::iniciarSesion,
                     enabled = !estado.cargando,
                     shape = RoundedCornerShape(50),
-                    modifier = Modifier.fillMaxWidth().height(56.dp)
+                    modifier = Modifier.fillMaxWidth().height(56.dp).testTag("botonIngresar")
                 ) {
                     if (estado.cargando) {
                         CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp,
                             color = MaterialTheme.colorScheme.onPrimary)
                     } else {
-                        Text("Ingresar", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.login_ingresar), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.width(8.dp))
                         Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
                     }
@@ -222,7 +225,7 @@ fun LoginScreen(
                 Spacer(Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center) {
-                    Text("¿Problemas de acceso?", style = MaterialTheme.typography.bodySmall,
+                    Text(stringResource(R.string.login_problemas), style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     TextButton(onClick = {
                         // Abre el marcador del teléfono (no requiere permisos)
@@ -232,7 +235,7 @@ fun LoginScreen(
                             // El emulador o dispositivo no tiene app de teléfono: no se hace nada
                         }
                     }) {
-                        Text("Contactar a Coordinación", color = MaterialTheme.colorScheme.secondary)
+                        Text(stringResource(R.string.login_contactar), color = MaterialTheme.colorScheme.secondary)
                     }
                 }
             }
@@ -247,7 +250,7 @@ fun LoginScreen(
                     Icon(Icons.Filled.Error, contentDescription = null, tint = Color.White)
                     Spacer(Modifier.width(10.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("FALLO DE AUTENTICACIÓN", style = MaterialTheme.typography.labelMedium,
+                        Text(stringResource(R.string.login_fallo), style = MaterialTheme.typography.labelMedium,
                             color = Color.White.copy(alpha = 0.85f), fontWeight = FontWeight.Bold)
                         Text(mensaje, color = Color.White, style = MaterialTheme.typography.bodyMedium)
                     }
@@ -256,7 +259,7 @@ fun LoginScreen(
                         shape = RoundedCornerShape(50),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White,
                             contentColor = MaterialTheme.colorScheme.error)
-                    ) { Text("Reintentar") }
+                    ) { Text(stringResource(R.string.reintentar)) }
                 }
             }
         }
@@ -266,9 +269,9 @@ fun LoginScreen(
         Surface(color = MaterialTheme.colorScheme.primaryContainer, shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(14.dp)) {
-                Text("Usuarios de prueba (clave 1234)", style = MaterialTheme.typography.labelLarge,
+                Text(stringResource(R.string.login_usuarios_prueba), style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold)
-                Text("Guía: 15.482.910-K  ·  Transportista: 12.345.678-5",
+                Text("Guía: 15.482.910-K  ·  Transportista: 12.345.678-5  ·  Coordinación: coordinacion@southbound.cl",
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }

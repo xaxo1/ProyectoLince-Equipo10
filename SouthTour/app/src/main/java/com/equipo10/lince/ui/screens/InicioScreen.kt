@@ -45,6 +45,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -54,9 +55,11 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.equipo10.lince.R
 import com.equipo10.lince.model.EstadoServicio
 import com.equipo10.lince.model.InicioUiState
 import com.equipo10.lince.model.Servicio
+import com.equipo10.lince.ui.components.BannerMensaje
 import com.equipo10.lince.ui.components.CargandoContenido
 import com.equipo10.lince.ui.components.ChipDato
 import com.equipo10.lince.ui.components.ErrorContenido
@@ -107,7 +110,7 @@ private fun ContenidoHoy(estado: InicioUiState, onVerDetalle: (Int) -> Unit) {
                     color = MaterialTheme.colorScheme.secondary
                 )
                 Text(
-                    "Hola, ${estado.nombre.substringBefore(" ")}",
+                    stringResource(R.string.hoy_hola, estado.nombre.substringBefore(" ")),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -119,6 +122,22 @@ private fun ContenidoHoy(estado: InicioUiState, onVerDetalle: (Int) -> Unit) {
                     ChipDato(Icons.Filled.Person, estado.rol)
                 }
             }
+        }
+
+        // ----- Sin conexión: datos de la caché de Room y hitos esperando sincronizar -----
+        if (estado.desdeCache || estado.pendientesSincronizar > 0) {
+            item {
+                BannerMensaje(
+                    texto = buildString {
+                        if (estado.desdeCache) append("Sin conexión: mostrando servicios guardados en el teléfono. ")
+                        if (estado.pendientesSincronizar > 0) append("${estado.pendientesSincronizar} registro(s) pendientes de sincronizar.")
+                    },
+                    esAlerta = true
+                )
+            }
+        }
+        if (estado.serviciosHoy.isEmpty()) {
+            item { Text(stringResource(R.string.hoy_sin_servicios), color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
 
         // ----- Servicios asignados -----
@@ -147,7 +166,7 @@ private fun TarjetaHoy(servicio: Servicio, onAccion: () -> Unit, onNavegar: () -
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.Top) {
                 Column(Modifier.weight(1f)) {
-                    Text("HORA DE RECOGIDA", style = MaterialTheme.typography.labelSmall,
+                    Text(stringResource(R.string.hoy_hora_recogida), style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(servicio.horaPickup, style = MaterialTheme.typography.displaySmall,
@@ -182,7 +201,7 @@ private fun TarjetaHoy(servicio: Servicio, onAccion: () -> Unit, onNavegar: () -
                             tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(buildAnnotatedString {
-                            append("${servicio.motivoCancelacion ?: "Cancelado"} • ")
+                            append("Cancelado · Lince ${servicio.estadoLince} / PL ${servicio.statusPL ?: "—"} • ")
                             withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append("Tarifa 100 % pagada") }
                         }, style = MaterialTheme.typography.bodyMedium)
                     }
@@ -191,9 +210,9 @@ private fun TarjetaHoy(servicio: Servicio, onAccion: () -> Unit, onNavegar: () -
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     // WHEN: el texto y el ícono del botón dependen del estado
                     val (texto, icono) = when (servicio.estado) {
-                        EstadoServicio.CONFIRMADO -> "Iniciar check-in" to Icons.Filled.HowToReg
-                        EstadoServicio.EN_CURSO -> "Continuar servicio" to Icons.Filled.PlayArrow
-                        else -> "Ver registro" to Icons.Filled.Visibility
+                        EstadoServicio.CONFIRMADO -> stringResource(R.string.hoy_iniciar) to Icons.Filled.HowToReg
+                        EstadoServicio.EN_CURSO -> stringResource(R.string.hoy_continuar) to Icons.Filled.PlayArrow
+                        else -> stringResource(R.string.hoy_ver_registro) to Icons.Filled.Visibility
                     }
                     Button(
                         onClick = onAccion,
@@ -234,14 +253,14 @@ private fun TarjetaFinJornada(proximo: Servicio?) {
                 Icon(Icons.Filled.Bedtime, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             }
             Spacer(Modifier.height(10.dp))
-            Text("Fin de la jornada de hoy", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.hoy_fin_jornada), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(4.dp))
             Text(
                 // LET + ELVIS: el texto cambia si existe un próximo servicio
                 proximo?.let {
                     "No hay más servicios pendientes para hoy. Tu próximo servicio es el " +
                         "${Formatos.fechaLegible(it.fecha).lowercase()} a las ${it.horaPickup} hrs."
-                } ?: "No hay más servicios pendientes para hoy.",
+                } ?: stringResource(R.string.hoy_sin_pendientes),
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -253,7 +272,7 @@ private fun TarjetaFinJornada(proximo: Servicio?) {
 
 /** Abre el punto de pickup en Google Maps (o en el navegador si no está instalado). */
 private fun abrirEnMapas(contexto: Context, lugar: String) {
-    val url = "https://www.google.com/maps/search/?api=1&query=" + Uri.encode("$lugar, Santiago, Chile")
+    val url = "https://www.google.com/maps/search/?api=1&query=" + Uri.encode("$lugar, Chile")
     try {
         contexto.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
     } catch (e: ActivityNotFoundException) {

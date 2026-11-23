@@ -150,8 +150,9 @@ fun iconoEstado(estado: EstadoServicio): ImageVector = when (estado) {
 }
 
 fun iconoTipo(tipo: TipoServicio): ImageVector = when (tipo) {
-    TipoServicio.TRASLADO -> Icons.Filled.FlightLand
-    TipoServicio.TOUR -> Icons.Filled.Tour
+    TipoServicio.TRANSFER -> Icons.Filled.FlightLand
+    TipoServicio.GUIDED_SERVICE -> Icons.Filled.Groups
+    TipoServicio.EXCURSION -> Icons.Filled.Tour
 }
 
 /** Pastilla de color genérica (fondo sólido y texto blanco, como en Stitch). */

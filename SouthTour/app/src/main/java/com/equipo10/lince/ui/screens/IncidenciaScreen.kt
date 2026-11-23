@@ -109,7 +109,7 @@ fun IncidenciaScreen(
                 Text(
                     "Se guardó \"${incidencia.tipo.etiqueta}\" a las ${incidencia.registradaEn.substringAfter(" ")}" +
                         (if (incidencia.rutaFoto != null) " con foto" else "") +
-                        ". Queda en el teléfono aunque cierres la app."
+                        ". Quedó registrada en el servidor y coordinación ya la puede ver."
                 )
             },
             confirmButton = { TextButton(onClick = onListo) { Text("Volver al servicio") } }
@@ -150,7 +150,7 @@ private fun FormularioIncidencia(
         // ---------- Tipo (obligatorio) ----------
         Seccion("Tipo de incidencia *") {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TipoIncidencia.entries.forEach { tipo ->
+                TipoIncidencia.manuales.forEach { tipo ->
                     FilterChip(
                         selected = estado.tipo == tipo,
                         onClick = { onTipo(tipo) },

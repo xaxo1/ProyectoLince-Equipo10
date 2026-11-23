@@ -1,0 +1,122 @@
+<resources>
+    <string name="app_name">SouthTour</string>
+
+    <!-- Navigation and titles -->
+    <string name="titulo_login">Sign in</string>
+    <string name="nav_hoy">Today</string>
+    <string name="nav_calendario">Calendar</string>
+    <string name="nav_disponibilidad">Availability</string>
+    <string name="nav_resumen">Summary</string>
+    <string name="nav_panel">Dashboard</string>
+    <string name="nav_southbound">Southbound</string>
+    <string name="titulo_perfil">My profile</string>
+    <string name="titulo_detalle">Service detail</string>
+    <string name="titulo_reserva">Full booking</string>
+    <string name="catalogo_southbound">Southbound catalog (API)</string>
+
+    <!-- Detail and geofence -->
+    <string name="atraso">Late</string>
+    <string name="pendiente_sync">Pending sync</string>
+    <string name="asignacion">Assignment</string>
+    <string name="asignacion_confirmada">You confirmed this assignment.</string>
+    <string name="asignacion_rechazada">You rejected this assignment.</string>
+    <string name="asignacion_pendiente">Do you confirm you will run this service?</string>
+    <string name="confirmar">Confirm</string>
+    <string name="rechazar">Reject</string>
+    <string name="llegada_geocerca">Hotel arrival (geofence)</string>
+    <string name="punto_pickup">Pickup point</string>
+    <string name="radio_geocerca">Geofence radius</string>
+    <string name="centro">Center</string>
+    <string name="sin_geocerca">This place has no geofence: arrival cannot be verified.</string>
+    <string name="regla">Rule</string>
+    <string name="regla_texto">≥ %1$d min before · GPS ±%2$d m max.</string>
+    <string name="distancia_actual">You are %1$d m from the hotel (accuracy ±%2$d m)</string>
+    <string name="medir_distancia">Measure distance to hotel</string>
+    <string name="check_in">Check-in</string>
+    <string name="check_out">Check-out</string>
+    <string name="pendiente">Pending</string>
+    <string name="hacer_check_in">Register arrival (check-in)</string>
+    <string name="hacer_check_out">Register end (check-out)</string>
+    <string name="reportar_posicion">Send my position to dispatch</string>
+    <string name="ir_con_waze">Drive with Waze to %1$s</string>
+    <string name="incidencias_titulo">Incidents (%1$d)</string>
+    <string name="sin_incidencias">No incidents reported.</string>
+    <string name="reportar_incidencia">Report incident</string>
+    <string name="pickup_dropoff">Pickup and drop-off</string>
+    <string name="hora_pickup">Pickup time</string>
+    <string name="dropoff">Drop-off</string>
+    <string name="pasajeros">Passengers</string>
+    <string name="oficina">Office</string>
+    <string name="vehiculo">Vehicle</string>
+    <string name="transportista">Driver</string>
+    <string name="guia">Guide</string>
+    <string name="idioma_requerido">Required language</string>
+    <string name="reserva">Booking</string>
+    <string name="agencia">Agency / client</string>
+    <string name="n_reserva">Booking #</string>
+    <string name="titular">Lead name</string>
+    <string name="estado_servicio">Service status</string>
+    <string name="ver_reserva">See full booking →</string>
+
+    <!-- Calendar -->
+    <string name="buscar">Search tour, agency or booking</string>
+    <string name="mostrando_de">Showing %1$d of %2$d services</string>
+    <string name="sin_servicios_categoria">No services in this category.</string>
+    <string name="sin_coincidencias">No services match \"%1$s\".</string>
+
+    <!-- Summary -->
+    <string name="mes_actual">Back to current month</string>
+    <string name="mis_servicios">My services</string>
+    <string name="completados">Completed</string>
+    <string name="cancelados">Cancelled</string>
+    <string name="puntualidad">On time</string>
+    <string name="total_southbound">Southbound services</string>
+    <string name="por_tipo">My services by type</string>
+    <string name="southbound_por_estado">Southbound by status (Lince API)</string>
+
+    <!-- Profile -->
+    <string name="datos_recurso">User data</string>
+    <string name="correo">Email</string>
+    <string name="empresa">Company</string>
+    <string name="id_lince">Lince API id</string>
+    <string name="servicios_mes">Services this month</string>
+    <string name="hitos_registrados">Milestones recorded</string>
+    <string name="pendientes_sync">Pending sync</string>
+    <string name="version">App version</string>
+    <string name="idioma">Language</string>
+    <string name="cerrar_sesion">Sign out</string>
+
+    <!-- Dispatch -->
+    <string name="hitos_hoy">Today\'s milestones</string>
+    <string name="actualizar">Refresh</string>
+    <string name="sin_hitos">No check-ins recorded today yet.</string>
+    <string name="ultimas_posiciones">Last position of each driver</string>
+    <string name="geocercas">Geofences (radius)</string>
+
+    <!-- Southbound catalog -->
+    <string name="pagina_de">Page %1$d of %2$d · %3$d results</string>
+    <string name="tipos_servicio">Service types</string>
+    <string name="cargar_mas">Load more</string>
+
+    <!-- Login y Hoy -->
+    <string name="login_red">OPERATIONS NETWORK ACTIVE · CHILE</string>
+    <string name="login_subtitulo">Internal operations platform — Guides and Drivers</string>
+    <string name="login_usuario">User / Identifier</string>
+    <string name="login_rut_correo">RUT or email</string>
+    <string name="login_ayuda">For fleet drivers or tour guides</string>
+    <string name="login_clave">Password</string>
+    <string name="login_ingresar">Sign in</string>
+    <string name="login_problemas">Trouble signing in?</string>
+    <string name="login_contactar">Contact dispatch</string>
+    <string name="login_fallo">AUTHENTICATION FAILED</string>
+    <string name="reintentar">Retry</string>
+    <string name="login_usuarios_prueba">Test users (password 1234)</string>
+    <string name="hoy_sin_servicios">You have no services assigned for today.</string>
+    <string name="hoy_hora_recogida">PICKUP TIME</string>
+    <string name="hoy_fin_jornada">End of today\'s shift</string>
+    <string name="hoy_sin_pendientes">No more pending services for today.</string>
+    <string name="hoy_hola">Hi, %1$s</string>
+    <string name="hoy_iniciar">Start check-in</string>
+    <string name="hoy_continuar">Continue service</string>
+    <string name="hoy_ver_registro">See record</string>
+</resources>

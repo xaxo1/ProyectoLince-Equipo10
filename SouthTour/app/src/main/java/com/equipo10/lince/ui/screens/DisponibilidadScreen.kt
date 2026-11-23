@@ -56,7 +56,7 @@ fun DisponibilidadScreen(viewModel: DisponibilidadViewModel = viewModel()) {
 private fun ListaDias(
     estado: DisponibilidadUiState,
     onBloquear: (String) -> Unit,
-    onDesbloquear: (String) -> Unit
+    onDesbloquear: (DiaDisponibilidad) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -75,7 +75,7 @@ private fun ListaDias(
         }
 
         items(estado.dias, key = { it.fecha }) { dia ->
-            FilaDia(dia = dia, onBloquear = { onBloquear(dia.fecha) }, onDesbloquear = { onDesbloquear(dia.fecha) })
+            FilaDia(dia = dia, onBloquear = { onBloquear(dia.fecha) }, onDesbloquear = { onDesbloquear(dia) })
         }
     }
 }
